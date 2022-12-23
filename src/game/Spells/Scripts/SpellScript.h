@@ -47,6 +47,8 @@ struct SpellScript
     virtual void OnSuccessfulFinish(Spell* /*spell*/) const {}
     // called at end of Spell::CheckCast - strict is true in Spell::Prepare
     virtual SpellCastResult OnCheckCast(Spell* /*spell*/, bool /*strict*/) const { return SPELL_CAST_OK; }
+    // called on Spell::SendCastResult - for overriding generic errors
+    virtual void OnSpellCastResultOverride(SpellCastResult& result, uint32& param1, uint32& param2) const {}
     // called before effect execution
     virtual void OnEffectExecute(Spell* /*spell*/, SpellEffectIndex /*effIdx*/) const {}
     // called in targeting to determine radius for spell
@@ -103,7 +105,7 @@ struct AuraScript
     // called before proc handler
     virtual SpellAuraProcResult OnProc(Aura* /*aura*/, ProcExecutionData& /*procData*/) const { return SPELL_AURA_PROC_OK; }
     // called on absorb of this aura
-    virtual void OnAbsorb(Aura* /*aura*/, int32& /*currentAbsorb*/, int32& /*remainingDamage*/, uint32& /*reflectedSpellId*/, int32& /*reflectDamage*/, bool& /*preventedDeath*/) const {}
+    virtual void OnAbsorb(Aura* /*aura*/, int32& /*currentAbsorb*/, int32& /*remainingDamage*/, uint32& /*reflectedSpellId*/, int32& /*reflectDamage*/, bool& /*preventedDeath*/, bool& /*dropCharge*/) const {}
     // called on mana shield absorb of this aura
     virtual void OnManaAbsorb(Aura* /*aura*/, int32& /*currentAbsorb*/) const {}
     // called on death prevention

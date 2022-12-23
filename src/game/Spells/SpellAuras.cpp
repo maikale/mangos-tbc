@@ -425,6 +425,7 @@ Aura::Aura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 const* curr
 Aura::~Aura()
 {
     delete m_storage;
+    delete m_spellmod;
 }
 
 AreaAura::AreaAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 const* currentDamage, int32 const* currentBasePoints, SpellAuraHolder* holder, Unit* target,
@@ -1116,7 +1117,9 @@ void Aura::HandleAddModifier(bool apply, bool Real)
             spellProto->StackAmount > 1 ? 0 : GetHolder()->GetAuraCharges());
     }
 
-    ((Player*)GetTarget())->AddSpellMod(m_spellmod, apply);
+    static_cast<Player*>(GetTarget())->AddSpellMod(m_spellmod, apply);
+    if (!apply)
+        m_spellmod = nullptr;
 
     ReapplyAffectedPassiveAuras();
 }
@@ -8437,7 +8440,7 @@ void SpellAuraHolder::Update(uint32 diff)
                 {
                     if (powertype == POWER_HEALTH)
                     {
-                        if (GetTarget()->GetHealth() <= manaPerSecond)
+                        if (GetTarget()->GetHealth() <= (uint32)manaPerSecond)
                         {
                             // cannot apply damage part so we have to cancel responsible aura
                             GetTarget()->RemoveAurasDueToSpell(GetId());
@@ -8795,6 +8798,16 @@ void SpellAuraHolder::SendAuraDurationForCaster(Player* caster)
     caster->GetSession()->SendPacket(data);
 }
 
+bool SpellAuraHolder::IsProcReady(TimePoint const& now) const
+{
+    return m_procCooldown < now;
+}
+
+void SpellAuraHolder::SetProcCooldown(std::chrono::milliseconds cooldown, TimePoint const& now)
+{
+    m_procCooldown = now + cooldown;
+}
+
 void SpellAuraHolder::SetHeartbeatResist(uint32 chance, int32 originalDuration, uint32 drLevel)
 {
     // NOTE: This is an experimental approximation of heartbeat resist mechanics, more research is required
@@ -8933,10 +8946,10 @@ SpellAuraProcResult Aura::OnProc(ProcExecutionData& data)
     return SPELL_AURA_PROC_OK;
 }
 
-void Aura::OnAbsorb(int32& currentAbsorb, int32& remainingDamage, uint32& reflectedSpellId, int32& reflectDamage, bool& preventedDeath)
+void Aura::OnAbsorb(int32& currentAbsorb, int32& remainingDamage, uint32& reflectedSpellId, int32& reflectDamage, bool& preventedDeath, bool& dropCharge)
 {
     if (AuraScript* script = GetAuraScript())
-        script->OnAbsorb(this, currentAbsorb, remainingDamage, reflectedSpellId, reflectDamage, preventedDeath);
+        script->OnAbsorb(this, currentAbsorb, remainingDamage, reflectedSpellId, reflectDamage, preventedDeath, dropCharge);
 }
 
 void Aura::OnManaAbsorb(int32& currentAbsorb)

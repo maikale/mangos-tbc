@@ -25,7 +25,7 @@
 
 #include "Common.h"
 #include "Auth/BigNumber.h"
-#include "Auth/Sha1.h"
+#include "Auth/CryptoHash.h"
 #include "SRP6/SRP6.h"
 #include "ByteBuffer.h"
 
@@ -43,6 +43,8 @@ class AuthSocket : public MaNGOS::Socket
         const static int s_BYTE_SIZE = 32;
 
         AuthSocket(boost::asio::io_service& service, std::function<void (Socket*)> closeHandler);
+
+        bool Open() override;
 
         void SendProof(Sha1Hash sha);
         void LoadRealmlist(ByteBuffer& pkt, uint32 acctid, uint8 accountSecurityLevel = 0);
