@@ -31,11 +31,11 @@
 #include "Maps/MapManager.h"
 #include "Maps/Map.h"
 #include "Globals/ObjectMgr.h"
-#include "ProgressBar.h"
+#include "Util/ProgressBar.h"
 #include "Chat/Chat.h"
 #include "Arena/ArenaTeam.h"
 #include "World/World.h"
-#include "WorldPacket.h"
+#include "Server/WorldPacket.h"
 #include "GameEvents/GameEventMgr.h"
 #include "Mails/Mail.h"
 

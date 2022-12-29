@@ -18,7 +18,7 @@
 
 #include "Entities/Object.h"
 #include "Globals/SharedDefines.h"
-#include "WorldPacket.h"
+#include "Server/WorldPacket.h"
 #include "Server/Opcodes.h"
 #include "Log.h"
 #include "World/World.h"
@@ -30,7 +30,7 @@
 #include "Entities/UpdateData.h"
 #include "Entities/Transports.h"
 #include "UpdateMask.h"
-#include "Util.h"
+#include "Util/Util.h"
 #include "Grids/CellImpl.h"
 #include "Grids/GridNotifiers.h"
 #include "Grids/GridNotifiersImpl.h"

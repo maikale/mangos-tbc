@@ -20,21 +20,17 @@
     \ingroup mangosd
 */
 
-#ifndef _WIN32
-#include "PosixDaemon.h"
-#endif
-
 #include "Common.h"
 #include "Master.h"
 #include "Server/WorldSocket.h"
 #include "WorldRunnable.h"
 #include "World/World.h"
 #include "Log.h"
-#include "Timer.h"
+#include "Util/Timer.h"
 #include "SystemConfig.h"
 #include "CliRunnable.h"
 #include "RASocket.h"
-#include "Util.h"
+#include "Util/Util.h"
 #include "revision_sql.h"
 #include "MaNGOSsoap.h"
 #include "Mails/MassMailMgr.h"
@@ -49,8 +45,10 @@
 #include <memory>
 
 #ifdef _WIN32
-#include "ServiceWin32.h"
+#include "Platform/ServiceWin32.h"
 extern int m_ServiceStatus;
+#else
+#include "Platform/PosixDaemon.h"
 #endif
 
 INSTANTIATE_SINGLETON_1(Master);

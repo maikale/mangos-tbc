@@ -18,8 +18,8 @@
 
 #include "Common.h"
 #include "Database/DatabaseEnv.h"
+#include "Server/WorldPacket.h"
 #include "Server/DBCStores.h"
-#include "WorldPacket.h"
 #include "Server/WorldSession.h"
 #include "World/World.h"
 #include "Globals/ObjectMgr.h"
@@ -35,7 +35,7 @@
 #include "Maps/GridDefines.h"
 #include "Maps/MapPersistentStateMgr.h"
 #include "Mails/Mail.h"
-#include "Util.h"
+#include "Util/Util.h"
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
 #include "Anticheat/Anticheat.hpp"
 #include "Spells/SpellMgr.h"

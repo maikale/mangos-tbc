@@ -18,7 +18,7 @@
 
 #include "Spells/Spell.h"
 #include "Database/DatabaseEnv.h"
-#include "WorldPacket.h"
+#include "Server/WorldPacket.h"
 #include "Server/WorldSession.h"
 #include "Grids/GridNotifiers.h"
 #include "Grids/GridNotifiersImpl.h"
@@ -40,7 +40,7 @@
 #include "Loot/LootMgr.h"
 #include "VMapFactory.h"
 #include "BattleGround/BattleGround.h"
-#include "Util.h"
+#include "Util/Util.h"
 #include "Chat/Chat.h"
 #include "Server/SQLStorages.h"
 #include "MotionGenerators/PathFinder.h"

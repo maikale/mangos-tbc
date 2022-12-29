@@ -18,7 +18,7 @@
 
 #include "Common.h"
 #include "Database/DatabaseEnv.h"
-#include "WorldPacket.h"
+#include "Server/WorldPacket.h"
 #include "Server/WorldSession.h"
 #include "Server/Opcodes.h"
 #include "Log.h"
@@ -40,7 +40,7 @@
 #include "OutdoorPvP/OutdoorPvP.h"
 #include "AI/BaseAI/CreatureAI.h"
 #include "DBScripts/ScriptMgr.h"
-#include "Util.h"
+#include "Util/Util.h"
 #include "Grids/GridNotifiers.h"
 #include "Grids/GridNotifiersImpl.h"
 #include "Grids/CellImpl.h"

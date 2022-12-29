@@ -23,7 +23,7 @@
 #include "Common.h"
 #include "Database/DatabaseEnv.h"
 #include "Config/Config.h"
-#include "ProgressBar.h"
+#include "Util/ProgressBar.h"
 #include "Log.h"
 #include "Master.h"
 #include "SystemConfig.h"
@@ -43,7 +43,7 @@
 #include <string>
 
 #ifdef _WIN32
-#include "ServiceWin32.h"
+#include "Platform/ServiceWin32.h"
 char serviceName[] = "mangosd";
 char serviceLongName[] = "MaNGOS world service";
 char serviceDescription[] = "Massive Network Game Object Server";
@@ -55,7 +55,7 @@ char serviceDescription[] = "Massive Network Game Object Server";
  */
 int m_ServiceStatus = -1;
 #else
-#include "PosixDaemon.h"
+#include "Platform/PosixDaemon.h"
 #endif
 
 DatabaseType WorldDatabase;                                 ///< Accessor to the world database
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
     }
 #endif
 
-    sLog.outString("[%s World server v%s] id(%d) port(%d)", _PACKAGENAME, VERSION
+    sLog.outString("[%s TBC World server v%s] id(%d) port(%d)", _PACKAGENAME, VERSION
         , sConfig.GetIntDefault("RealmID", -1), sConfig.GetIntDefault("WorldServerPort", -1));
     sLog.outString("\n\n"
         "       _____     __  __       _   _  _____  ____   _____ \n"

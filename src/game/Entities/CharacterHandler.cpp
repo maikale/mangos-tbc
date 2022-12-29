@@ -18,7 +18,7 @@
 
 #include "Common.h"
 #include "Database/DatabaseEnv.h"
-#include "WorldPacket.h"
+#include "Server/WorldPacket.h"
 #include "Globals/SharedDefines.h"
 #include "Server/WorldSession.h"
 #include "Server/Opcodes.h"
@@ -35,7 +35,7 @@
 #include "Tools/PlayerDump.h"
 #include "Social/SocialMgr.h"
 #include "GMTickets/GMTicketMgr.h"
-#include "Util.h"
+#include "Util/Util.h"
 #include "Tools/Language.h"
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
 #include "Anticheat/Anticheat.hpp"

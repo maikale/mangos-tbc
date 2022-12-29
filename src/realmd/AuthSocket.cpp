@@ -29,15 +29,15 @@
 #include "RealmList.h"
 #include "AuthSocket.h"
 #include "AuthCodes.h"
-#include "SRP6/SRP6.h"
-#include "CommonDefines.h"
+#include "Auth/SRP6.h"
+#include "Util/CommonDefines.h"
 
 #include <openssl/md5.h>
 #include <ctime>
 #include <memory>
 #include <utility>
 
-//#include "Util.h" -- for commented utf8ToUpperOnlyLatin
+//#include "Util/Util.h" -- for commented utf8ToUpperOnlyLatin
 
 extern DatabaseType LoginDatabase;
 

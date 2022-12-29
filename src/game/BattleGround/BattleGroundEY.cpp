@@ -24,8 +24,8 @@
 #include "Globals/ObjectMgr.h"
 #include "BattleGroundMgr.h"
 #include "Tools/Language.h"
-#include "WorldPacket.h"
-#include "Util.h"
+#include "Server/WorldPacket.h"
+#include "Util/Util.h"
 #include "Maps/MapManager.h"
 #include "AI/ScriptDevAI/include/sc_grid_searchers.h"
 

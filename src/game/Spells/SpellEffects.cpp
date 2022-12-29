@@ -18,7 +18,7 @@
 
 #include "Common.h"
 #include "Database/DatabaseEnv.h"
-#include "WorldPacket.h"
+#include "Server/WorldPacket.h"
 #include "Server/Opcodes.h"
 #include "Log.h"
 #include "World/World.h"
@@ -42,7 +42,7 @@
 #include "BattleGround/BattleGround.h"
 #include "Tools/Language.h"
 #include "Social/SocialMgr.h"
-#include "Util.h"
+#include "Util/Util.h"
 #include "Entities/TemporarySpawn.h"
 #include "DBScripts/ScriptMgr.h"
 #include "Skills/SkillDiscovery.h"
@@ -6725,20 +6725,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                     unitTarget->RemoveAurasDueToSpell(36904);
                     unitTarget->CastSpell(nullptr, 37013, TRIGGERED_NONE);
-                    return;
-                }
-                case 37641:                                 // Whirlwind
-                {
-                    UnitAI* ai = m_caster->AI();
-                    if (!ai || m_caster->GetTypeId() != TYPEID_UNIT)
-                        return;
-
-                    if (urand(0, 2) == 0 && m_caster->HasAura(37640))
-                    {
-                        ai->DoResetThreat();
-                        if (Unit* target = static_cast<Creature*>(m_caster)->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0, nullptr, SELECT_FLAG_PLAYER))
-                            m_caster->AddThreat(target, 100000.f);
-                    }
                     return;
                 }
                 case 37775:                                 // Karazhan - Chess NPC Action - Poison Cloud
