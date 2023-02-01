@@ -139,7 +139,8 @@ static const Position aMadrigosaLoc[] =
 static const Position aKalecLoc[] =
 {
     {1573.1461f, 755.20245f, 99.524956f, 3.59537816047668457f}, // spawn loc
-    {1474.2347f, 624.0703f,  29.32589f,  0.f}, // first move
+    {1489.438f, 651.615f, 44.65125f, 0.f}, // first move
+    //{1518.570190f, 555.474609f, 53.477119f, 0.f}, // open door
     {1511.6547f, 550.70245f, 25.510078f, 0.f}, // open door
     {1648.255f,  519.3769f,  165.8482f,  0.f}, // fly away
 };
