@@ -24,7 +24,8 @@
 
 MapDataContainer::MapDataContainer() : m_spellListContainer(sObjectMgr.GetCreatureSpellListContainer()),
     m_spawnGroupContainer(sObjectMgr.GetSpawnGroupContainer()), m_CreatureEventAIEventEntryMap(sEventAIMgr.GetCreatureEventEntryAIMap()),
-    m_CreatureEventAIEventGuidMap(sEventAIMgr.GetCreatureEventGuidAIMap()), m_creatureEventAIComputedDataMap(sEventAIMgr.GetEAIComputedDataMap())
+    m_CreatureEventAIEventGuidMap(sEventAIMgr.GetCreatureEventGuidAIMap()), m_creatureEventAIComputedDataMap(sEventAIMgr.GetEAIComputedDataMap()),
+    m_stringIds(sScriptMgr.GetStringIdMap()), m_stringIdsByString(sScriptMgr.GetStringIdByStringMap())
 {
     for (uint32 i = 0; i < SCRIPT_TYPE_MAX; ++i)
         SetScriptMap(ScriptMapType(i), sScriptMgr.GetScriptMap(ScriptMapType(i)));
@@ -97,4 +98,19 @@ void MapDataContainer::SetScriptMap(ScriptMapType scriptMapType, std::shared_ptr
 std::shared_ptr<ScriptMapMapName> MapDataContainer::GetScriptMap(ScriptMapType scriptMapType)
 {
     return m_scriptMaps[scriptMapType];
+}
+
+uint32 MapDataContainer::GetStringId(std::string& stringId) const
+{
+    auto itr = m_stringIdsByString->find(stringId);
+    if (itr == m_stringIdsByString->end())
+        return 0;
+
+    return itr->second.Id;
+}
+
+void MapDataContainer::SetStringIdMaps(std::shared_ptr<StringIdMap> stringIds, std::shared_ptr<StringIdMapByString> stringIdsByString)
+{
+    m_stringIds = stringIds;
+    m_stringIdsByString = stringIdsByString;
 }

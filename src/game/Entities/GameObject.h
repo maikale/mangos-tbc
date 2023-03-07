@@ -393,6 +393,7 @@ struct GameObjectInfo
 
     uint32 MinMoneyLoot;
     uint32 MaxMoneyLoot;
+    uint32 StringId;
     uint32 ScriptId;
 
     // helpers
@@ -617,6 +618,7 @@ struct GameObjectData
     int32 spawntimesecsmax;
     uint32 animprogress;
     int32 goState;
+    uint32 StringId;
     uint8 spawnMask;
     uint16 gameEvent;
     uint16 GuidPoolId;

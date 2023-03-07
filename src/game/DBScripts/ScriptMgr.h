@@ -59,7 +59,7 @@ enum ScriptCommand                                          // resSource, resTar
     // datalong=spellid
     // datalong2=castFlags, enum TriggerCastFlags
     // dataint1-4 optional for random selected spell
-    SCRIPT_COMMAND_PLAY_SOUND               = 16,           // resSource = WorldObject, target=any/player, datalong (sound_id), datalong2 (bitmask: 0/1=target-player, 0/2=with distance dependent, 0/4=map wide, 0/8=zone wide; so 1|2 = 3 is target with distance dependent)
+    SCRIPT_COMMAND_PLAY_SOUND               = 16,           // resSource = WorldObject, target=any/player, datalong (sound_id), datalong2 (bitmask: 0/1=target-player, 0/2=with distance dependent, 0/4=map wide, 0/8=zone wide, 0/16=area wide; so 1|2 = 3 is target with distance dependent), 8+16 does not work together
     SCRIPT_COMMAND_CREATE_ITEM              = 17,           // source or target must be player, datalong = item entry, datalong2 = amount
     SCRIPT_COMMAND_DESPAWN_SELF             = 18,           // resSource = Creature, datalong = despawn delay
     SCRIPT_COMMAND_PLAY_MOVIE               = 19,           // target can only be a player, datalog = movie id
@@ -156,8 +156,9 @@ enum ScriptInfoDataFlags
     SCRIPT_FLAG_BUDDY_BY_SPAWN_GROUP        = 0x100,        // buddy is from spawn group
     SCRIPT_FLAG_ALL_ELIGIBLE_BUDDIES        = 0x200,        // multisource/multitarget - will execute for each eligible
     SCRIPT_FLAG_BUDDY_BY_GO                 = 0x400,        // take the buddy by GO (for commands which can target both creature and GO)
+    SCRIPT_FLAG_BUDDY_BY_STRING_ID          = 0x800,        // takes buddy from string id - creature or go
 };
-#define MAX_SCRIPT_FLAG_VALID               (2 * SCRIPT_FLAG_BUDDY_BY_GO - 1)
+#define MAX_SCRIPT_FLAG_VALID               (2 * SCRIPT_FLAG_BUDDY_BY_STRING_ID - 1)
 
 struct ScriptInfo
 {
@@ -266,6 +267,7 @@ struct ScriptInfo
         {
             uint32 soundId;                                 // datalong
             uint32 flags;                                   // datalong2
+            uint32 playParameter;                           // datalong3
         } playSound;
 
         struct                                              // SCRIPT_COMMAND_CREATE_ITEM (17)
@@ -645,6 +647,8 @@ class ScriptMgr
 
         void LoadScriptMap(ScriptMapType scriptType, bool reload = false);
 
+        void LoadStringIds(bool reload = false);
+
         void LoadDbScriptStrings();
         void LoadDbScriptRandomTemplates();
         void CheckRandomStringTemplates(std::set<int32>& ids);
@@ -664,6 +668,10 @@ class ScriptMgr
         static void CollectPossibleEventIds(std::set<uint32>& eventIds);
 
         std::shared_ptr<ScriptMapMapName> GetScriptMap(ScriptMapType scriptMapType);
+
+        bool ExistsStringId(uint32 stringId);
+        std::shared_ptr<StringIdMap> GetStringIdMap() { return m_stringIds; }
+        std::shared_ptr<StringIdMapByString> GetStringIdByStringMap() { return m_stringIdsByString; }
     private:
         void LoadScripts(ScriptMapType scriptType);
         void CheckScriptTexts(ScriptMapType scriptType);
@@ -682,6 +690,10 @@ class ScriptMgr
         ScriptNameMap           m_scriptNames;
 
         std::shared_ptr<ScriptMapMapName> m_scriptMaps[SCRIPT_TYPE_MAX];
+
+        // SCRIPT_ID
+        std::shared_ptr<StringIdMap> m_stringIds;
+        std::shared_ptr<StringIdMapByString> m_stringIdsByString;
 };
 
 // Starters for events

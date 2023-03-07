@@ -164,7 +164,7 @@ void ScriptMgr::LoadScripts(ScriptMapType scriptType)
         }
 
         // generic command args check
-        if (tmp.buddyEntry && !(tmp.data_flags & SCRIPT_FLAG_BUDDY_BY_GUID))
+        if (tmp.buddyEntry && !(tmp.data_flags & SCRIPT_FLAG_BUDDY_BY_GUID) && (tmp.data_flags & SCRIPT_FLAG_BUDDY_BY_STRING_ID) == 0)
         {
             if (tmp.IsCreatureBuddy() && !ObjectMgr::GetCreatureTemplate(tmp.buddyEntry))
             {
@@ -207,7 +207,7 @@ void ScriptMgr::LoadScripts(ScriptMapType scriptType)
                     CreatureData const* data = sObjectMgr.GetCreatureData(tmp.searchRadiusOrGuid);
                     if (!data)
                     {
-                        sLog.outErrorDb("Table `%s` has buddy defined by guid (SCRIPT_FLAG_BUDDY_BY_GUID %u set) but no npc spawned with guid %u, skipping.", tablename, SCRIPT_FLAG_BUDDY_BY_GUID,  tmp.searchRadiusOrGuid);
+                        sLog.outErrorDb("Table `%s` for script id %u has buddy defined by guid (SCRIPT_FLAG_BUDDY_BY_GUID %u set) but no npc spawned with guid %u, skipping.", tablename, tmp.id, SCRIPT_FLAG_BUDDY_BY_GUID,  tmp.searchRadiusOrGuid);
                         continue;
                     }
                 }
@@ -216,7 +216,7 @@ void ScriptMgr::LoadScripts(ScriptMapType scriptType)
                     GameObjectData const* data = sObjectMgr.GetGOData(tmp.searchRadiusOrGuid);
                     if (!data)
                     {
-                        sLog.outErrorDb("Table `%s` has go-buddy defined by guid (SCRIPT_FLAG_BUDDY_BY_GUID %u set) but no go spawned with guid %u, skipping.", tablename, SCRIPT_FLAG_BUDDY_BY_GUID,  tmp.searchRadiusOrGuid);
+                        sLog.outErrorDb("Table `%s` for script id %u has go-buddy defined by guid (SCRIPT_FLAG_BUDDY_BY_GUID %u set) but no go spawned with guid %u, skipping.", tablename, tmp.id, SCRIPT_FLAG_BUDDY_BY_GUID,  tmp.searchRadiusOrGuid);
                         continue;
                     }
                 }
@@ -228,7 +228,7 @@ void ScriptMgr::LoadScripts(ScriptMapType scriptType)
                     auto pool = sPoolMgr.GetPoolCreatures(tmp.searchRadiusOrGuid);
                     if (pool.isEmpty())
                     {
-                        sLog.outErrorDb("Table `%s` has go-buddy defined by pool (SCRIPT_FLAG_BUDDY_BY_POOL %u set) but pool %u is empty, skipping.", tablename, tmp.data_flags, tmp.searchRadiusOrGuid);
+                        sLog.outErrorDb("Table `%s` for script id %u has go-buddy defined by pool (SCRIPT_FLAG_BUDDY_BY_POOL %u set) but pool %u is empty, skipping.", tablename, tmp.id, tmp.data_flags, tmp.searchRadiusOrGuid);
                         continue;
                     }
                 }
@@ -237,7 +237,7 @@ void ScriptMgr::LoadScripts(ScriptMapType scriptType)
                     auto pool = sPoolMgr.GetPoolGameObjects(tmp.searchRadiusOrGuid);
                     if (pool.isEmpty())
                     {
-                        sLog.outErrorDb("Table `%s` has go-buddy defined by pool (SCRIPT_FLAG_BUDDY_BY_POOL %u set) but pool %u is empty, skipping.", tablename, tmp.data_flags, tmp.searchRadiusOrGuid);
+                        sLog.outErrorDb("Table `%s` for script id %u has go-buddy defined by pool (SCRIPT_FLAG_BUDDY_BY_POOL %u set) but pool %u is empty, skipping.", tablename, tmp.id, tmp.data_flags, tmp.searchRadiusOrGuid);
                         continue;
                     }
                 }
@@ -247,7 +247,16 @@ void ScriptMgr::LoadScripts(ScriptMapType scriptType)
                 uint32 groupEntry = tmp.searchRadiusOrGuid;
                 if (sObjectMgr.GetSpawnGroupContainer()->spawnGroupMap.find(groupEntry) == sObjectMgr.GetSpawnGroupContainer()->spawnGroupMap.end())
                 {
-                    sLog.outErrorDb("Table `%s` has go-buddy defined by group (SCRIPT_FLAG_BUDDY_BY_SPAWN_GROUP %u set) but group %u is empty, skipping.", tablename, tmp.data_flags, tmp.searchRadiusOrGuid);
+                    sLog.outErrorDb("Table `%s` for script id %u has go-buddy defined by group (SCRIPT_FLAG_BUDDY_BY_SPAWN_GROUP %u set) but group %u is empty, skipping.", tablename, tmp.id, tmp.data_flags, tmp.searchRadiusOrGuid);
+                    continue;
+                }
+            }
+            else if (tmp.data_flags & SCRIPT_FLAG_BUDDY_BY_STRING_ID)
+            {
+                uint32 stringId = tmp.buddyEntry;
+                if (stringId && !sScriptMgr.ExistsStringId(stringId))
+                {
+                    sLog.outErrorDb("Table `%s` has buddy defined by stringId (SCRIPT_FLAG_BUDDY_BY_STRING_ID) but stringId does not exist, skipping.", tablename, tmp.id, stringId);
                     continue;
                 }
             }
@@ -489,11 +498,11 @@ void ScriptMgr::LoadScripts(ScriptMapType scriptType)
                                     tablename, tmp.playSound.soundId, tmp.id);
                     continue;
                 }
-                // bitmask: 0/1=target-player, 0/2=with distance dependent, 0/4=map wide, 0/8=zone wide
-                if (tmp.playSound.flags & ~(1 | 2 | 4 | 8))
+                // bitmask: 0/1=target-player, 0/2=with distance dependent, 0/4=map wide, 0/8=zone wide, 0/16=area wide
+                if (tmp.playSound.flags & ~(1 | 2 | 4 | 8 | 16))
                     sLog.outErrorDb("Table `%s` using unsupported sound flags (datalong2: %u) in SCRIPT_COMMAND_PLAY_SOUND for script id %u, unsupported flags will be ignored", tablename, tmp.playSound.flags, tmp.id);
-                if ((tmp.playSound.flags & (1 | 2)) > 0 && (tmp.playSound.flags & (4 | 8)) > 0)
-                    sLog.outErrorDb("Table `%s` uses sound flags (datalong2: %u) in SCRIPT_COMMAND_PLAY_SOUND for script id %u, combining (1|2) with (4|8) makes no sense", tablename, tmp.playSound.flags, tmp.id);
+                if ((tmp.playSound.flags & (1 | 2)) > 0 && (tmp.playSound.flags & (4 | 8 | 16)) > 0)
+                    sLog.outErrorDb("Table `%s` uses sound flags (datalong2: %u) in SCRIPT_COMMAND_PLAY_SOUND for script id %u, combining (1|2) with (4|8|16) makes no sense", tablename, tmp.playSound.flags, tmp.id);
                 break;
             }
             case SCRIPT_COMMAND_CREATE_ITEM:                // 17
@@ -1102,6 +1111,55 @@ void ScriptMgr::LoadScriptMap(ScriptMapType scriptType, bool reload)
     }
 }
 
+void ScriptMgr::LoadStringIds(bool reload)
+{
+    std::unique_ptr<QueryResult> result(WorldDatabase.Query("SELECT Id, Name FROM string_id"));
+    uint32 count = 0;
+
+    if (!result)
+    {
+        BarGoLink bar(1);
+        bar.step();
+        sLog.outString(">> Loaded %u script definitions from table string_id", count);
+        sLog.outString();
+        return;
+    }
+    
+    auto stringIdMap = std::make_shared<StringIdMap>();
+    auto stringIdsByString = std::make_shared<StringIdMapByString>();
+
+    BarGoLink bar(result->GetRowCount());
+
+    do
+    {
+        bar.step();
+
+        Field* fields = result->Fetch();
+
+        StringId stringId;
+        stringId.Id = fields[0].GetInt32();
+        stringId.Name = fields[1].GetCppString();
+
+        stringIdMap->emplace(stringId.Id, stringId);
+        stringIdsByString->emplace(stringId.Name, stringId);
+    }
+    while(result->NextRow());        
+
+    m_stringIds = stringIdMap;
+    m_stringIdsByString = stringIdsByString;
+
+    if (reload)
+    {
+        sMapMgr.DoForAllMaps([stringIdMap, stringIdsByString](Map* map)
+        {
+            map->GetMessager().AddMessage([stringIdMap, stringIdsByString](Map* map)
+            {
+                map->GetMapDataContainer().SetStringIdMaps(stringIdMap, stringIdsByString);
+            });
+        });
+    }
+}
+
 void ScriptMgr::LoadDbScriptStrings()
 {
     CheckScriptTexts(SCRIPT_TYPE_QUEST_END);
@@ -1380,6 +1438,37 @@ bool ScriptAction::GetScriptProcessTargets(WorldObject* originalSource, WorldObj
                 if ((m_script->data_flags & SCRIPT_FLAG_ALL_ELIGIBLE_BUDDIES) == 0 && closest)
                     buddies.push_back(closest);
             }
+        }
+        else if (m_script->data_flags & SCRIPT_FLAG_BUDDY_BY_STRING_ID)
+        {
+            WorldObject* origin = originalSource ? originalSource : originalTarget;
+            if (origin->GetTypeId() == TYPEID_PLAYER && originalSource && originalSource->GetTypeId() != TYPEID_PLAYER)
+                origin = originalTarget;
+            auto worldObjects = m_map->GetWorldObjects(m_script->buddyEntry);
+            if (worldObjects == nullptr)
+                return false;
+            if ((m_script->data_flags & SCRIPT_FLAG_ALL_ELIGIBLE_BUDDIES) != 0)
+            {
+                for (WorldObject* wo : *worldObjects)
+                    buddies.push_back(wo);
+            }
+            else
+            {
+                WorldObject* closest = nullptr;
+                for (WorldObject* wo : *worldObjects)
+                {
+                    if (!closest)
+                        closest = wo;
+                    else if (origin->GetDistance(wo, true, DIST_CALC_NONE) < origin->GetDistance(closest, true, DIST_CALC_NONE))
+                        closest = wo;
+                }
+                if (closest)
+                    buddies.push_back(closest);
+            }
+            if (m_script->searchRadiusOrGuid > 0)
+                for (WorldObject* buddy : buddies)
+                    if (buddy->IsWithinDist(origin, m_script->searchRadiusOrGuid))
+                        buddies.erase(std::remove(buddies.begin(), buddies.end(), buddy), buddies.end());
         }
         else                                                // Buddy by entry
         {
@@ -2040,6 +2129,10 @@ bool ScriptAction::ExecuteDbscriptCommand(WorldObject* pSource, WorldObject* pTa
             PlayPacketParameters params(PLAY_SET);
             if (pSoundTarget)
                 params = PlayPacketParameters(PLAY_TARGET, pSoundTarget);
+            if (m_script->playSound.flags & 8) // playParameter is zoneId
+                params = PlayPacketParameters(PLAY_ZONE, m_script->playSound.playParameter ? m_script->playSound.playParameter : pSource->GetZoneId());
+            if (m_script->playSound.flags & 16) // playParameter is areaId
+                params = PlayPacketParameters(PLAY_AREA, m_script->playSound.playParameter ? m_script->playSound.playParameter : pSource->GetAreaId());
 
             if (m_script->data_flags & SCRIPT_FLAG_COMMAND_ADDITIONAL)
                 pSource->PlayMusic(m_script->playSound.soundId, params);
@@ -2047,8 +2140,8 @@ bool ScriptAction::ExecuteDbscriptCommand(WorldObject* pSource, WorldObject* pTa
             {
                 if (m_script->playSound.flags & 2)
                     pSource->PlayDistanceSound(m_script->playSound.soundId, params);
-                else if (m_script->playSound.flags & (4 | 8))
-                    m_map->PlayDirectSoundToMap(m_script->playSound.soundId, m_script->playSound.flags & 8 ? pSource->GetZoneId() : 0);
+                else if (m_script->playSound.flags & 4)
+                    m_map->PlayDirectSoundToMap(m_script->playSound.soundId);
                 else
                     pSource->PlayDirectSound(m_script->playSound.soundId, params);
             }
@@ -3252,4 +3345,9 @@ bool StartEvents_Event(Map* map, uint32 id, Object* source, Object* target, bool
         execParam = Map::SCRIPT_EXEC_PARAM_UNIQUE_BY_TARGET;
 
     return map->ScriptsStart(SCRIPT_TYPE_EVENT, id, source, target, execParam);
+}
+
+bool ScriptMgr::ExistsStringId(uint32 stringId)
+{
+    return m_stringIds->find(stringId) != m_stringIds->end();
 }
