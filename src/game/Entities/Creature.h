@@ -29,6 +29,7 @@
 
 #include <list>
 #include <memory>
+#include <optional>
 
 struct SpellEntry;
 
@@ -164,7 +165,6 @@ struct CreatureInfo
     uint32  EquipmentTemplateId;
     uint32  GossipMenuId;
     uint32  InteractionPauseTimer;
-    VisibilityDistanceType visibilityDistanceType;
     uint32  CorpseDelay;
     uint32  SpellList;
     uint32  StringID1;
@@ -454,6 +454,7 @@ struct TrainerSpell
     uint32 reqSkillValue;
     uint32 reqLevel;
     uint32 learnedSpell;
+    std::array<std::optional<uint32>, 3> reqAbility;
     uint32 conditionId;
     bool isProvidedReqLevel;
 
@@ -846,7 +847,7 @@ class Creature : public Unit
 
         bool IsPreventingDeath() const override;
 
-        virtual void AddCooldown(SpellEntry const& spellEntry, ItemPrototype const* itemProto = nullptr, bool permanent = false, uint32 forcedDuration = 0) override;
+        virtual void AddCooldown(SpellEntry const& spellEntry, ItemPrototype const* itemProto = nullptr, bool permanent = false, uint32 forcedDuration = 0, bool ignoreCat = false) override;
 
         // spell scripting persistency
         bool HasBeenHitBySpell(uint32 spellId);

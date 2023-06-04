@@ -204,10 +204,6 @@ void Creature::AddToWorld()
     if (sWorld.isForceLoadMap(GetMapId()) || (GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_ACTIVE))
         SetActiveObjectState(true);
 
-    // Check if visibility distance different
-    if (GetCreatureInfo()->visibilityDistanceType != VisibilityDistanceType::Normal)
-        GetVisibilityData().SetVisibilityDistanceOverride(GetCreatureInfo()->visibilityDistanceType);
-
     if (m_countSpawns)
         GetMap()->AddToSpawnCount(GetObjectGuid());
 }
@@ -3040,10 +3036,10 @@ void Creature::Heartbeat()
         ScheduleAINotify(0);
 }
 
-void Creature::AddCooldown(SpellEntry const& spellEntry, ItemPrototype const* /*itemProto*/, bool permanent, uint32 forcedDuration)
+void Creature::AddCooldown(SpellEntry const& spellEntry, ItemPrototype const* /*itemProto*/, bool permanent, uint32 forcedDuration, bool ignoreCat /*= false*/)
 {
     uint32 recTime = forcedDuration ? forcedDuration : spellEntry.RecoveryTime;
-    uint32 categoryRecTime = spellEntry.CategoryRecoveryTime;
+    uint32 categoryRecTime = ignoreCat ? 0 : spellEntry.CategoryRecoveryTime;
     if (!forcedDuration)
     {
         uint32 cooldown = 0;
