@@ -14,62 +14,60 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-/* ScriptData
-SDName: Searing_Gorge
-SD%Complete: 80
-SDComment: Quest support: 3367.
-SDCategory: Searing Gorge
-EndScriptData */
+ /* ScriptData
+ SDName: Searing_Gorge
+ SD%Complete: 80
+ SDComment: Quest support: 3367.
+ SDCategory: Searing Gorge
+ EndScriptData */
 
-/* ContentData
-npc_dorius_stonetender
-EndContentData */
+ /* ContentData
+ npc_dorius_stonetender
+ EndContentData */
 
 #include "AI/ScriptDevAI/include/sc_common.h"
 #include "AI/ScriptDevAI/base/escort_ai.h"
 
-/*######
-## npc_dorius_stonetender
-######*/
+ /*######
+ ## npc_dorius_stonetender
+ ######*/
 
 enum
 {
-    SAY_DORIUS_AGGRO_1              = 4351,
-    SAY_DORIUS_AGGRO_2              = 4352,
-    SAY_DORIUS_AGGRO_3              = 4353,
+    SAY_DORIUS_AGGRO_1 = 4351,
+    SAY_DORIUS_AGGRO_2 = 4352,
+    SAY_DORIUS_AGGRO_3 = 4353,
 
-    SAY_DORIUS_TO_PLAYER            = 4354,
-    SAY_DORIUS_FINISH               = 4359,
+    SAY_DORIUS_TO_PLAYER = 4354,
+    SAY_DORIUS_FINISH = 4359,
 
-    NPC_DARK_IRON_STEELSHIFTER      = 8337,
+    NPC_DARK_IRON_STEELSHIFTER = 8337,
 
-    SPELL_MARKSMAN_HIT              = 12198,
-    
-    RELAY_SCRIPT_FINISHED           = 8284,
+    SPELL_MARKSMAN_HIT = 12198,
 
-    PATH_ID                         = 8284,        // Sniffed Waypoints for Escort Event
-    QUEST_ID_SUNTARA_STONES         = 3367,
+    RELAY_SCRIPT_FINISHED = 8284,
+
+    PATH_ID = 8284,        // Sniffed Waypoints for Escort Event
+    QUEST_ID_SUNTARA_STONES = 3367,
 };
 
 struct npc_dorius_stonetenderAI : public npc_escortAI
 {
-    npc_dorius_stonetenderAI(Creature* pCreature) : npc_escortAI(pCreature) 
-    { 
-        Reset(); 
-    }
+    npc_dorius_stonetenderAI(Creature* pCreature) : npc_escortAI(pCreature) { Reset(); }
 
     void Reset() override
     {
-        m_creature->SetStandState(UNIT_STAND_STATE_DEAD, true);
+        if (!HasEscortState(STATE_ESCORT_ESCORTING))
+            m_creature->SetStandState(UNIT_STAND_STATE_DEAD);
     }
 
     void Aggro(Unit* who) override
     {
         switch (urand(0, 2))
         {
-            case 0: DoBroadcastText(SAY_DORIUS_AGGRO_1, m_creature, who); break;
-            case 1: DoBroadcastText(SAY_DORIUS_AGGRO_2, m_creature, who); break;
-            case 2: DoBroadcastText(SAY_DORIUS_AGGRO_3, m_creature, who); break;
+        case 0: DoBroadcastText(SAY_DORIUS_AGGRO_1, m_creature, who); break;
+        case 1: DoBroadcastText(SAY_DORIUS_AGGRO_2, m_creature, who); break;
+        case 2: DoBroadcastText(SAY_DORIUS_AGGRO_3, m_creature, who); break;
         }
     }
 
@@ -84,15 +82,15 @@ struct npc_dorius_stonetenderAI : public npc_escortAI
     }
 
     void SpellHit(Unit* pCaster, const SpellEntry* pSpell) override
-    {        
+    {
         if (pSpell->Id == SPELL_MARKSMAN_HIT)
-        { 
+        {
             if (Player* pPlayer = GetPlayerForEscort())
                 pPlayer->RewardPlayerAndGroupAtEventExplored(QUEST_ID_SUNTARA_STONES, m_creature);
             // all rp things handled via relayscript
             m_creature->GetMap()->ScriptsStart(SCRIPT_TYPE_RELAY, RELAY_SCRIPT_FINISHED, m_creature, pCaster);
             End();
-        }            
+        }
     }
 
     void SummonedMovementInform(Creature* pSummoned, uint32 /*moveType*/, uint32 uiPointId) override
@@ -104,19 +102,19 @@ struct npc_dorius_stonetenderAI : public npc_escortAI
     void WaypointReached(uint32 uiPointId) override
     {
         switch (uiPointId)
-        {         
-            case 37:
-                // Have to do it via core because we need Player as target
-                if (Player* pPlayer = GetPlayerForEscort())
-                {
-                    DoBroadcastText(SAY_DORIUS_TO_PLAYER, m_creature, pPlayer);
-                    m_creature->HandleEmote(EMOTE_ONESHOT_POINT);
-                }
-                break;
-            case 53:
-                if (Player* pPlayer = GetPlayerForEscort())                
-                    m_creature->SetFacingToObject(pPlayer);
-                break;
+        {
+        case 37:
+            // Have to do it via core because we need Player as target
+            if (Player* pPlayer = GetPlayerForEscort())
+            {
+                DoBroadcastText(SAY_DORIUS_TO_PLAYER, m_creature, pPlayer);
+                m_creature->HandleEmote(EMOTE_ONESHOT_POINT);
+            }
+            break;
+        case 53:
+            if (Player* pPlayer = GetPlayerForEscort())
+                m_creature->SetFacingToObject(pPlayer);
+            break;
         }
     }
 
