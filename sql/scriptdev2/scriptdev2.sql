@@ -335,6 +335,7 @@ UPDATE creature_template SET ScriptName='boss_murmur' WHERE entry=18708;
 UPDATE creature_template SET ScriptName='boss_grandmaster_vorpil' WHERE entry=18732;
 UPDATE creature_template SET ScriptName='boss_blackheart_the_inciter' WHERE entry=18667;
 UPDATE creature_template SET ScriptName='boss_ambassador_hellmaw' WHERE entry=18731;
+UPDATE creature_template SET ScriptName='npc_voidwalker_summoner' WHERE entry=19427;
 UPDATE creature_template SET ScriptName='npc_void_traveler' WHERE entry=19226;
 UPDATE creature_template SET ScriptName='dummy_blackheart_the_inciter' WHERE entry IN(19300,19301,19302,19303,19304);
 UPDATE gameobject_template SET ScriptName='go_screaming_hall_door' WHERE entry=183295;
@@ -4389,45 +4390,7 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,broadc
 
 -- -1 555 000 SHADOW LABYRINTH
 INSERT INTO script_texts (entry,content_default,sound,type,language,emote,broadcast_text_id,comment) VALUES
-('-1555000','Infidels have invaded the sanctuary! Sniveling pests...You have yet to learn the true meaning of agony!','10473','1','0','0','0','hellmaw SAY_INTRO'),
-('-1555001','Pathetic mortals! You will pay dearly.','10475','1','0','0','17860','hellmaw SAY_AGGRO1'),
-('-1555002','I will break you!','10476','1','0','0','17861','hellmaw SAY_AGGRO2'),
-('-1555003','Finally, something to relieve the tedium!','10477','1','0','0','17863','hellmaw SAY_AGGRO3'),
-('-1555004','Aid me, you fools, before it''s too late!','10474','1','0','0','17859','hellmaw SAY_HELP'),
-('-1555005','Do you fear death?','10478','1','0','0','17864','hellmaw SAY_SLAY1'),
-('-1555006','This is the part I enjoy most...','10479','1','0','0','17865','hellmaw SAY_SLAY2'),
-('-1555007','Do not... grow... overconfident, mortal.','10480','1','0','0','17866','hellmaw SAY_DEATH'),
-
-('-1555008','All flesh must burn.','10482','1','0','0','0','blackhearth SAY_INTRO1'),
-('-1555009','All creation must be unmade!','10483','1','0','0','0','blackhearth SAY_INTRO2'),
-('-1555010','Power will be yours!','10484','1','0','0','0','blackhearth SAY_INTRO3'),
-('-1555011','You''ll be sorry!','10486','1','0','0','17563','blackhearth SAY_AGGRO1'),
-('-1555012','Time for fun!','10487','1','0','0','16433','blackhearth SAY_AGGRO2'),
-('-1555013','I see dead people!','10488','1','0','0','0','blackhearth SAY_AGGRO3'),
-('-1555014','No coming back for you!','10489','1','0','0','17573','blackhearth SAY_SLAY1'),
-('-1555015','Nice try.','10490','1','0','0','17575','blackhearth SAY_SLAY2'),
-('-1555016','Help us, hurry!','10485','1','0','0','0','blackhearth SAY_HELP'),
-('-1555017','This... no... good...','10491','1','0','0','17569','blackhearth SAY_DEATH'),
-
-('-1555018','Be ready for Dark One''s return.','10492','1','0','0','0','blackhearth SAY2_INTRO1'),
-('-1555019','So we have place in new universe.','10493','1','0','0','0','blackhearth SAY2_INTRO2'),
-('-1555020','Dark one promise!','10494','1','0','0','0','blackhearth SAY2_INTRO3'),
-('-1555021','You''ll be sorry!','10496','1','0','0','17563','blackhearth SAY2_AGGRO1'),
-('-1555022','Time to kill!','10497','1','0','0','17565','blackhearth SAY2_AGGRO2'),
-('-1555023','You be dead people!','10498','1','0','0','0','blackhearth SAY2_AGGRO3'),
-('-1555024','Now you gone for good!','10499','1','0','0','17576','blackhearth SAY2_SLAY1'),
-('-1555025','You failed, haha haha','10500','1','0','0','0','blackhearth SAY2_SLAY2'),
-('-1555026','Help us, hurry!','10495','1','0','0','0','blackhearth SAY2_HELP'),
-('-1555027','Arrgh, aah...ahhh','10501','1','0','0','0','blackhearth SAY2_DEATH'),
-
 ('-1555028','Keep your minds focused for the days of reckoning are close at hand. Soon, the destroyer of worlds will return to make good on his promise. Soon the destruction of all that is will begin!','10522','1','0','0','0','vorpil SAY_INTRO'),
-('-1555029','I''ll make an offering of your blood!','10524','1','0','0','17868','vorpil SAY_AGGRO1'),
-('-1555030','You''ll be a fine example for the others!','10525','1','0','0','17869','vorpil SAY_AGGRO2'),
-('-1555031','Good, a worthy sacrifice!','10526','1','0','0','17870','vorpil SAY_AGGRO3'),
-('-1555032','Come to my aid! Heed your master now!','10523','1','0','0','17867','vorpil SAY_HELP'),
-('-1555033','I serve with pride.','10527','1','0','0','17871','vorpil SAY_SLAY1'),
-('-1555034','Your death is for the greater cause...','10528','1','0','0','17872','vorpil SAY_SLAY2'),
-('-1555035','I give my life... gladly.','10529','1','0','0','17873','vorpil SAY_DEATH'),
 
 ('-1555036','%s draws energy from the air...','0','2','0','0','18799','murmur EMOTE_SONIC_BOOM');
 
