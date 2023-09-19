@@ -69,6 +69,7 @@ INSERT INTO scripted_areatrigger VALUES
 (4115,'at_naxxramas'),
 (4156,'at_naxxramas'),
 (4288,'at_dark_portal'),
+(4347,'at_shh_netherkurse'),
 (4422,'at_area_52'),
 (4466,'at_area_52'),
 (4471,'at_area_52'),
@@ -798,6 +799,7 @@ UPDATE creature_template SET ScriptName='npc_blade_dance_target' WHERE entry IN(
 UPDATE creature_template SET ScriptName='npc_shattered_hand_zealot' WHERE entry=17462;
 UPDATE creature_template SET ScriptName='npc_shattered_hand_scout' WHERE entry=17693;
 UPDATE instance_template SET ScriptName='instance_shattered_halls' WHERE map=540;
+UPDATE gameobject_template SET ScriptName='go_netherkurse_door' WHERE entry=182539;
 
 /* MAGTHERIDON'S LAIR */
 UPDATE instance_template SET ScriptName='instance_magtheridons_lair' WHERE map=544;
@@ -1525,20 +1527,7 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,broadc
 ('-1000138','Prepare to enter oblivion, meddlers. You have unleashed a god!','0','1','0','15','18443','Salhadaar SAY'),
 ('-1000139','Avruu''s magic is broken!  I''m free once again!','0','0','0','0','13447','aeranas SAY_FREE'),
 
-('-1000147','I remember well the sting of defeat at the conclusion of the Third War. I have waited far too long for my revenge. Now the shadow of the Legion falls over this world. It is only a matter of time until all of your failed creation... is undone. ','11332','1','0','0','20076','kazzak SAY_INTRO'),
-('-1000148','The Legion will conquer all!','11333','1','0','0','20077','kazzak SAY_AGGRO1'),
-('-1000149','All mortals will perish!','11334','1','0','0','20078','kazzak SAY_AGGRO2'),
-('-1000150','All life must be eradicated! ','11335','1','0','0','20079','kazzak SAY_SURPREME1'),
-('-1000151','I''ll rip the flesh from your bones!','11336','1','0','0','20080','kazzak SAY_SURPREME2'),
-('-1000152','Kirel narak!','11337','1','0','0','20081','kazzak SAY_KILL1'),
-('-1000153','Contemptible wretch!','11338','1','0','0','20082','kazzak SAY_KILL2'),
-('-1000154','The universe will be remade.','11339','1','0','0','20083','kazzak SAY_KILL3'),
-('-1000155','The Legion... will never... fall.','11340','1','0','0','20084','kazzak SAY_DEATH'),
-
 ('-1000156','Bloodmaul Brew? Me favorite!','0','0','0','0','18171','bladespire ogre SAY_BREW_1'),
-
-('-1000157','Invaders, you dangle upon the precipice of oblivion! The Burning Legion comes and with it comes your end.','0','1','0','0','15895','kazzak SAY_RAND1'),
-('-1000158','Impudent whelps, you only delay the inevitable. Where one has fallen, ten shall rise. Such is the will of Kazzak...','0','1','0','0','16432','kazzak SAY_RAND2'),
 
 ('-1000159','Do not proceed. You will be eliminated.','11344','1','0','0','20941','doomwalker SAY_AGGRO'),
 ('-1000160','Tectonic disruption commencing.','11345','1','0','0','20942','doomwalker SAY_EARTHQUAKE_1'),
@@ -4182,38 +4171,6 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,broadc
 -- -1 553 000 THE BOTANICA
 
 -- -1 554 000 THE MECHANAR
-INSERT INTO script_texts (entry,content_default,sound,type,language,emote,broadcast_text_id,comment) VALUES
-('-1554000','Think you can hurt me, huh?  Think I''m afraid a'' you?','11165','1','0','0','19955','Say on Ability use 1'),
-('-1554001','Go ahead, gimme your best shot.  I can take it!','11166','1','0','0','19956','Say on Ability use 2'),
-('-1554002','Bully!','11167','1','0','0','19957','Say on Death'),
-('-1554003','Can''t say I didn''t warn you....','11163','1','0','0','19953','Say on Player Kill 2'),
-('-1554004','Damn, I''m good!','11164','1','0','0','19954','Say on Player Kill 1'),
-('-1554005','You should split while you can.','11162','1','0','0','19952','Say on Aggro'),
-('-1554006','REUSE_ME','0','0','0','0','0','REUSE_ME'),
-('-1554007','REUSE_ME','0','0','0','0','0','REUSE_ME'),
-('-1554008','REUSE_ME','0','0','0','0','0','REUSE_ME'),
-('-1554009','REUSE_ME','0','0','0','0','0','REUSE_ME'),
-('-1554010','REUSE_ME','0','0','0','0','0','REUSE_ME'),
-('-1554011','REUSE_ME','0','0','0','0','0','REUSE_ME'),
-('-1554012','REUSE_ME','0','0','0','0','0','REUSE_ME'),
-
-('-1554013','Don''t value your life very much, do you?','11186','1','0','0','19959','sepethrea SAY_AGGRO'),
-('-1554014','I am not alone.','11191','1','0','0','19965','sepethrea SAY_SUMMON'),
-('-1554015','Think you can take the heat?','11189','1','0','0','19963','sepethrea SAY_DRAGONS_BREATH_1'),
-('-1554016','Anar''endal dracon!','11190','1','0','0','19964','sepethrea SAY_DRAGONS_BREATH_2'),
-('-1554017','And don''t come back!','11187','1','0','0','19961','sepethrea SAY_SLAY1'),
-('-1554018','Endala finel endal!','11188','1','0','0','19962','sepethrea SAY_SLAY2'),
-('-1554019','Anu... bala belore...alon.','11192','1','0','0','19966','sepethrea SAY_DEATH'),
-
-('-1554020','We are on a strict timetable. You will not interfere!','11193','1','0','0','20041','pathaleon SAY_AGGRO'),
-('-1554021','I''m looking for a team player...','11197','1','0','0','18716','pathaleon SAY_DOMINATION_1'),
-('-1554022','You work for me now!','11198','1','0','0','20040','pathaleon SAY_DOMINATION_2'),
-('-1554023','Time to supplement my work force.','11196','1','0','0','18717','pathaleon SAY_SUMMON'),
-('-1554024','I prefer to be hands-on...','11199','1','0','0','18725','pathaleon SAY_ENRAGE'),
-('-1554025','A minor inconvenience.','11194','1','0','0','20042','pathaleon SAY_SLAY_1'),
-('-1554026','Looks like you lose.','11195','1','0','0','20043','pathaleon SAY_SLAY_2'),
-('-1554027','The project will... continue.','11200','1','0','0','20044','pathaleon SAY_DEATH'),
-('-1554028','I have been waiting for you!','0','1','0','53','19059','pathaleon SAY_INTRO');
 
 -- -1 555 000 SHADOW LABYRINTH
 INSERT INTO script_texts (entry,content_default,sound,type,language,emote,broadcast_text_id,comment) VALUES
