@@ -302,7 +302,6 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     std::string account, os;
     Sha1Hash sha1;
     BigNumber v, s, g, N, K;
-    WorldPacket packet, SendAddonPacked;
 
     // Read the content of the packet
     recvPacket >> ClientBuild;
@@ -319,7 +318,7 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     // Check the version of client trying to connect
     if (!IsAcceptableClientBuild(ClientBuild))
     {
-        packet.Initialize(SMSG_AUTH_RESPONSE, 1);
+        WorldPacket packet(SMSG_AUTH_RESPONSE, 1);
         packet << uint8(AUTH_VERSION_MISMATCH);
 
         SendPacket(packet);
@@ -333,7 +332,7 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     LoginDatabase.escape_string(safe_account);
     // No SQL injection, username escaped.
 
-    QueryResult* result =
+    auto queryResult =
         LoginDatabase.PQuery("SELECT "
                              "a.id, "                    //0
                              "gmlevel, "                 //1
@@ -353,9 +352,9 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
                              safe_account.c_str());
 
     // Stop if the account is not found
-    if (!result)
+    if (!queryResult)
     {
-        packet.Initialize(SMSG_AUTH_RESPONSE, 1);
+        WorldPacket packet(SMSG_AUTH_RESPONSE, 1);
         packet << uint8(AUTH_UNKNOWN_ACCOUNT);
 
         SendPacket(packet);
@@ -364,7 +363,7 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
         return false;
     }
 
-    Field* fields = result->Fetch();
+    Field* fields = queryResult->Fetch();
 
     N.SetHexStr("894B645E89E1535BBDAD5B8B290650530801B18EBFBF5E8FAB3C82872A3E9BB7");
     g.SetDword(7);
@@ -388,11 +387,10 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     {
         if (strcmp(fields[3].GetString(), GetRemoteAddress().c_str()))
         {
-            packet.Initialize(SMSG_AUTH_RESPONSE, 1);
+            WorldPacket packet(SMSG_AUTH_RESPONSE, 1);
             packet << uint8(AUTH_FAILED);
             SendPacket(packet);
 
-            delete result;
             BASIC_LOG("WorldSocket::HandleAuthSession: Sent Auth Response (Account IP differs).");
             return false;
         }
@@ -423,10 +421,8 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     uint32 accountFlags = fields[11].GetUInt32();
 	std::string platform = fields[12].GetString();
 
-    delete result;
-
     // Re-check account ban (same check as in realmd)
-    QueryResult* banresult =
+    auto banresult =
         LoginDatabase.PQuery("SELECT 1 FROM account_banned WHERE account_id = %u AND active = 1 AND (expires_at > UNIX_TIMESTAMP() OR expires_at = banned_at)"
                              "UNION "
                              "SELECT 1 FROM ip_banned WHERE (expires_at = banned_at OR expires_at > UNIX_TIMESTAMP()) AND ip = '%s'",
@@ -434,11 +430,9 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
 
     if (banresult) // if account banned
     {
-        packet.Initialize(SMSG_AUTH_RESPONSE, 1);
+        WorldPacket packet(SMSG_AUTH_RESPONSE, 1);
         packet << uint8(AUTH_BANNED);
         SendPacket(packet);
-
-        delete banresult;
 
         sLog.outError("WorldSocket::HandleAuthSession: Sent Auth Response (Account banned).");
         return false;
@@ -449,8 +443,8 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
 
     if (allowedAccountType > SEC_PLAYER && AccountTypes(security) < allowedAccountType)
     {
-        WorldPacket Packet(SMSG_AUTH_RESPONSE, 1);
-        Packet << uint8(AUTH_UNAVAILABLE);
+        WorldPacket packet(SMSG_AUTH_RESPONSE, 1);
+        packet << uint8(AUTH_UNAVAILABLE);
 
         SendPacket(packet);
 
@@ -473,7 +467,7 @@ bool WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
 
     if (memcmp(sha.GetDigest(), digest, 20))
     {
-        packet.Initialize(SMSG_AUTH_RESPONSE, 1);
+        WorldPacket packet(SMSG_AUTH_RESPONSE, 1);
         packet << uint8(AUTH_FAILED);
 
         SendPacket(packet);
