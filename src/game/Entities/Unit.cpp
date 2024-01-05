@@ -391,8 +391,9 @@ Unit::Unit() :
         m_createResistance = 0;
 
     m_attacking = nullptr;
-    m_modMeleeHitChance = 0.0f;
-    m_modRangedHitChance = 0.0f;
+    m_modWeaponHitChance[BASE_ATTACK] = 0.0f;
+    m_modWeaponHitChance[OFF_ATTACK] = 0.0f;
+    m_modWeaponHitChance[RANGED_ATTACK] = 0.0f;
     m_modSpellHitChance = 0.0f;
     for (float& i : m_modSpellCritChance)
         i = 0.0f;
@@ -3776,9 +3777,7 @@ uint32 Unit::CalculateCritAmount(CalcDamageInfo* meleeInfo) const
 
 float Unit::GetHitChance(WeaponAttackType attackType) const
 {
-    if (attackType == RANGED_ATTACK)
-        return m_modRangedHitChance;
-    return m_modMeleeHitChance;
+    return m_modWeaponHitChance[attackType];
 }
 
 float Unit::GetHitChance(SpellSchoolMask schoolMask) const
@@ -4647,7 +4646,7 @@ void Unit::SetFacingTo(float ori)
     init.Launch();
     // orientation change is in-place
     UpdateSplinePosition();
-    movespline->_Finalize();
+    EndSpline();
 }
 
 void Unit::SetFacingToObject(WorldObject* object)
@@ -4661,7 +4660,7 @@ void Unit::SetFacingToObject(WorldObject* object)
     init.Launch();
     // orientation change is in-place
     UpdateSplinePosition();
-    movespline->_Finalize();
+    EndSpline();
 }
 
 bool Unit::isInAccessablePlaceFor(Unit const* unit) const
@@ -11517,6 +11516,12 @@ void Unit::DisableSpline()
 {
     m_movementInfo.RemoveMovementFlag(MovementFlags(MOVEFLAG_SPLINE_ENABLED | MOVEFLAG_FORWARD));
     movespline->_Interrupt();
+}
+
+void Unit::EndSpline()
+{
+    m_movementInfo.RemoveMovementFlag(MovementFlags(MOVEFLAG_SPLINE_ENABLED | MOVEFLAG_FORWARD));
+    movespline->_Finalize();
 }
 
 // This will create a new creature and set the current unit as the controller of that new creature
