@@ -5533,7 +5533,7 @@ void Player::UpdateCombatSkills(Unit* /*pVictim*/, WeaponAttackType attType, boo
         return;
 
     // The farther player is from the cap, the easier it gets to level up the skill
-    float chance = ((float(std::max(1, (room / 5))) / (cap / 5)) * 100);
+    float chance = ((float(std::max(1, (room / 5))) / (cap / 5.f)) * 100);
 
     // Weapon skills: increase chance by intellect
     if (!defence)
@@ -6442,7 +6442,7 @@ void Player::CheckAreaExploreAndOutdoor()
                 uint32 XP;
                 if (diff < -5)
                 {
-                    XP = uint32(sObjectMgr.GetBaseXP(GetLevel() + 5) * sWorld.getConfig(CONFIG_FLOAT_RATE_XP_EXPLORE));
+                    XP = uint32(sObjectMgr.GetBaseXP(GetLevel() + 5) * GetMap()->GetXPModRate(RateModType::EXPLORE));
                 }
                 else if (diff > 5)
                 {
@@ -6452,11 +6452,11 @@ void Player::CheckAreaExploreAndOutdoor()
                     else if (exploration_percent < 0)
                         exploration_percent = 0;
 
-                    XP = uint32(sObjectMgr.GetBaseXP(p->area_level) * exploration_percent / 100 * sWorld.getConfig(CONFIG_FLOAT_RATE_XP_EXPLORE));
+                    XP = uint32(sObjectMgr.GetBaseXP(p->area_level) * exploration_percent / 100 * GetMap()->GetXPModRate(RateModType::EXPLORE));
                 }
                 else
                 {
-                    XP = uint32(sObjectMgr.GetBaseXP(p->area_level) * sWorld.getConfig(CONFIG_FLOAT_RATE_XP_EXPLORE));
+                    XP = uint32(sObjectMgr.GetBaseXP(p->area_level) * GetMap()->GetXPModRate(RateModType::EXPLORE));
                 }
 
                 GiveXP(XP, nullptr);
@@ -13316,7 +13316,7 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
     QuestStatusData& q_status = mQuestStatus[quest_id];
 
     // Used for client inform but rewarded only in case not max level
-    uint32 xp = uint32(pQuest->XPValue(this) * sWorld.getConfig(CONFIG_FLOAT_RATE_XP_QUEST));
+    uint32 xp = uint32(pQuest->XPValue(this) * GetMap()->GetXPModRate(RateModType::QUEST));
 
     if (GetLevel() < GetMaxAttainableLevel())
         GiveXP(xp, nullptr);

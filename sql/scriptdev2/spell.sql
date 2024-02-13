@@ -50,6 +50,7 @@ INSERT INTO spell_scripts(Id, ScriptName) VALUES
 (11889,'spell_capture_mountain_giant'),
 (11610,'spell_gammerita_turtle_camera'),
 (12479,'spell_hex_of_jammalan'),
+(13258,'spell_summon_goblin_bomb'),
 (16380,'spell_greater_invisibility_mob'),
 (17016,'spell_placing_beacon_torch'),
 (17244,'spell_anastari_possess'),
@@ -61,6 +62,7 @@ INSERT INTO spell_scripts(Id, ScriptName) VALUES
 (20038,'spell_explosion_razorgore'),
 (21651,'spell_opening_capping'),
 (22858,'spell_retaliation_creature'),
+(23134,'spell_goblin_bomb'),
 (23226,'spell_ritual_candle_aura'),
 (24228,'spell_arlokk_vanish'),
 (24314,'spell_threatening_gaze'),
@@ -340,6 +342,7 @@ INSERT INTO spell_scripts(Id, ScriptName) VALUES
 (37431,'spell_lurker_spout_initial'),
 (37429,'spell_lurker_spout_turning'),
 (37430,'spell_lurker_spout_turning'),
+(37437,'spell_clear_all_debuffs'),
 (37851,'spell_tag_for_single_use'),
 (37896,'spell_to_infinity_and_above'),
 (38119,'spell_calling_rider'),
@@ -720,7 +723,13 @@ INSERT INTO spell_scripts(Id, ScriptName) VALUES
 (40470,'spell_paladin_tier_6_trinket'),
 (31789,'spell_righteous_defense'),
 (31893,'spell_seal_of_blood_self_damage'),
-(31898,'spell_seal_of_blood_self_damage');
+(31898,'spell_seal_of_blood_self_damage'),
+(20467,'spell_judgement_of_command'),
+(20963,'spell_judgement_of_command'),
+(20964,'spell_judgement_of_command'),
+(20965,'spell_judgement_of_command'),
+(20966,'spell_judgement_of_command'),
+(27171,'spell_judgement_of_command');
 
 -- Warlock
 INSERT INTO spell_scripts(Id, ScriptName) VALUES

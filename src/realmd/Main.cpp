@@ -31,7 +31,7 @@
 #include "revision.h"
 #include "revision_sql.h"
 #include "Util/Util.h"
-#include "Network/Listener.hpp"
+#include "Network/AsyncListener.hpp"
 
 #include <openssl/opensslv.h>
 #include <openssl/crypto.h>
@@ -41,6 +41,7 @@
 
 #include <boost/program_options.hpp>
 #include <boost/version.hpp>
+#include <boost/thread.hpp>
 
 #include <iostream>
 #include <string>
@@ -67,11 +68,14 @@ bool StartDB();
 void UnhookSignals();
 void HookSignals();
 
-bool stopEvent = false;                                     ///< Setting it to true stops the server
+bool stopEvent = false;                                     // Setting it to true stops the server
+bool restart = false;
 
-DatabaseType LoginDatabase;                                 ///< Accessor to the realm server database
+DatabaseType LoginDatabase;                                 // Accessor to the realm server database
 
-/// Launch the realm server
+boost::asio::io_service service;
+
+// Launch the realm server
 int main(int argc, char* argv[])
 {
     std::string configFile, serviceParameter;
@@ -161,7 +165,7 @@ int main(int argc, char* argv[])
     sLog.outString("Using commit hash(%s) committed on %s", REVISION_ID, REVISION_DATE);
     sLog.outString("Using configuration file %s.", configFile.c_str());
 
-    ///- Check the version of the configuration file
+    // Check the version of the configuration file
     uint32 confVersion = sConfig.GetIntDefault("ConfVersion", 0);
     if (confVersion < _REALMDCONFVERSION)
     {
@@ -194,7 +198,7 @@ int main(int argc, char* argv[])
     sLog.outString();
     sLog.outString("<Ctrl-C> to stop.");
 
-    /// realmd PID file creation
+    // realmd PID file creation
     std::string pidfile = sConfig.GetStringDefault("PidFile");
     if (!pidfile.empty())
     {
@@ -209,14 +213,14 @@ int main(int argc, char* argv[])
         sLog.outString("Daemon PID: %u\n", pid);
     }
 
-    ///- Initialize the database connection
+    // Initialize the database connection
     if (!StartDB())
     {
         Log::WaitBeforeContinueIfNeed();
         return 1;
     }
 
-    ///- Get the list of realms for the server
+    // Get the list of realms for the server
     sRealmList.Initialize(sConfig.GetIntDefault("RealmsStateUpdateDelay", 20));
     if (sRealmList.size() == 0)
     {
@@ -232,17 +236,20 @@ int main(int argc, char* argv[])
     LoginDatabase.Execute("DELETE FROM ip_banned WHERE expires_at<=" _UNIXTIME_ " AND expires_at<>banned_at");
     LoginDatabase.CommitTransaction();
 
-    // FIXME - more intelligent selection of thread count is needed here.  config option?
-    MaNGOS::Listener<AuthSocket> listener(
+    uint32 networkThreadCount = sConfig.GetIntDefault("ListenerThreads", 1);
+    MaNGOS::AsyncListener<AuthSocket> listener(service,
             sConfig.GetStringDefault("BindIP", "0.0.0.0"),
-            sConfig.GetIntDefault("RealmServerPort", DEFAULT_REALMSERVER_PORT),
-            sConfig.GetIntDefault("ListenerThreads", 1)
+            sConfig.GetIntDefault("RealmServerPort", DEFAULT_REALMSERVER_PORT)
     );
 
-    ///- Catch termination signals
+    std::vector<std::thread> threads;
+    for (uint32 i = 0; i < networkThreadCount; ++i)
+        threads.emplace_back([&]() { service.run(); });
+
+    // Catch termination signals
     HookSignals();
 
-    ///- Handle affinity for multiple processors and process priority on Windows
+    // Handle affinity for multiple processors and process priority on Windows
 #ifdef _WIN32
     {
         HANDLE hProcess = GetCurrentProcess();
@@ -311,38 +318,43 @@ int main(int argc, char* argv[])
 #endif
     }
 
+    service.stop();
 
-    ///- Wait for the delay thread to exit
+    for (uint32 i = 0; i < networkThreadCount; ++i)
+        threads[i].join();
+
+    // Wait for the delay thread to exit
     LoginDatabase.HaltDelayThread();
 
-    ///- Remove signal handling before leaving
+    // Remove signal handling before leaving
     UnhookSignals();
 
     sLog.outString("Halting process...");
-    return 0;
+    return restart ? 2 : 0; // unified exit codes with mangosd
 }
 
-/// Handle termination signals
+// Handle termination signals
 /** Put the global variable stopEvent to 'true' if a termination signal is caught **/
 void OnSignal(int s)
 {
     switch (s)
     {
         case SIGINT:
-        case SIGTERM:
             stopEvent = true;
+            restart = true;
             break;
+        case SIGTERM:
 #ifdef _WIN32
         case SIGBREAK:
+#endif
             stopEvent = true;
             break;
-#endif
     }
 
     signal(s, OnSignal);
 }
 
-/// Initialize connection to the database
+// Initialize connection to the database
 bool StartDB()
 {
     std::string dbstring = sConfig.GetStringDefault("LoginDatabaseInfo");
@@ -362,7 +374,7 @@ bool StartDB()
 
     if (!LoginDatabase.CheckRequiredField("realmd_db_version", REVISION_DB_REALMD))
     {
-        ///- Wait for already started DB delay threads to end
+        // Wait for already started DB delay threads to end
         LoginDatabase.HaltDelayThread();
         return false;
     }
@@ -370,7 +382,7 @@ bool StartDB()
     return true;
 }
 
-/// Define hook 'OnSignal' for all termination signals
+// Define hook 'OnSignal' for all termination signals
 void HookSignals()
 {
     signal(SIGINT, OnSignal);
@@ -380,7 +392,7 @@ void HookSignals()
 #endif
 }
 
-/// Unhook the signals before leaving
+// Unhook the signals before leaving
 void UnhookSignals()
 {
     signal(SIGINT, nullptr);
