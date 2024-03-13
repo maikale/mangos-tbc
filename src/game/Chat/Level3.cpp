@@ -27,7 +27,7 @@
 #include "Entities/Player.h"
 #include "Entities/GameObject.h"
 #include "Chat/Chat.h"
-#include "Log.h"
+#include "Log/Log.h"
 #include "Guilds/Guild.h"
 #include "Guilds/GuildMgr.h"
 #include "Globals/ObjectAccessor.h"
@@ -276,7 +276,6 @@ bool ChatHandler::HandleReloadAllSpellCommand(char* /*args*/)
     HandleReloadSpellElixirCommand((char*)"a");
     HandleReloadSpellLearnSpellCommand((char*)"a");
     HandleReloadSpellProcEventCommand((char*)"a");
-    HandleReloadSpellBonusesCommand((char*)"a");
     HandleReloadSpellProcItemEnchantCommand((char*)"a");
     HandleReloadSpellScriptTargetCommand((char*)"a");
     HandleReloadSpellTargetPositionCommand((char*)"a");
@@ -675,14 +674,6 @@ bool ChatHandler::HandleReloadSpellAreaCommand(char* /*args*/)
     sLog.outString("Re-Loading SpellArea Data...");
     sSpellMgr.LoadSpellAreas();
     SendGlobalSysMessage("DB table `spell_area` (spell dependences from area/quest/auras state) reloaded.");
-    return true;
-}
-
-bool ChatHandler::HandleReloadSpellBonusesCommand(char* /*args*/)
-{
-    sLog.outString("Re-Loading Spell Bonus Data...");
-    sSpellMgr.LoadSpellBonuses();
-    SendGlobalSysMessage("DB table `spell_bonus_data` (spell damage/healing coefficients) reloaded.");
     return true;
 }
 
