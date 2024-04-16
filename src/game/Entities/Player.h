@@ -64,6 +64,11 @@ struct FactionTemplateEntry;
 #include "PlayerBot/Base/PlayerbotAI.h"
 #endif
 
+#ifdef ENABLE_PLAYERBOTS
+class PlayerbotAI;
+class PlayerbotMgr;
+#endif
+
 struct AreaTrigger;
 
 typedef std::deque<Mail*> PlayerMails;
@@ -515,6 +520,9 @@ enum PlayerExtraFlags
     // other states
     PLAYER_EXTRA_PVP_DEATH          = 0x0100,                // store PvP death status until corpse creating.
     PLAYER_EXTRA_WHISP_RESTRICTION  = 0x0200,
+
+    // death prevention
+    PLAYER_EXTRA_GM_UNKILLABLE         = 0x0400,
 };
 
 // 2^n values
@@ -1136,6 +1144,7 @@ class Player : public Unit
         Item* GetItemByGuid(ObjectGuid guid) const;
         Item* GetItemByPos(uint16 pos) const;
         Item* GetItemByPos(uint8 bag, uint8 slot) const;
+        Item* GetItemByEntry(uint32 item) const;
         uint32 GetItemDisplayIdInSlot(uint8 bag, uint8 slot) const;
         Item* GetWeaponForAttack(WeaponAttackType attackType) const { return GetWeaponForAttack(attackType, false, false); }
         Item* GetWeaponForAttack(WeaponAttackType attackType, bool nonbroken, bool useable) const;
@@ -1557,6 +1566,10 @@ class Player : public Unit
         void learnQuestRewardedSpells();
         void learnQuestRewardedSpells(Quest const* quest);
         void learnSpellHighRank(uint32 spellid);
+
+#ifdef ENABLE_PLAYERBOTS
+        void learnClassLevelSpells(bool includeHighLevelQuestRewards = false);
+#endif
 
         uint32 GetFreeTalentPoints() const { return GetUInt32Value(PLAYER_CHARACTER_POINTS1); }
         void SetFreeTalentPoints(uint32 points) { SetUInt32Value(PLAYER_CHARACTER_POINTS1, points); }
@@ -2264,11 +2277,28 @@ class Player : public Unit
         bool IsInDuel() const { return duel && duel->startTime != 0; }
 #endif
 
+#ifdef ENABLE_PLAYERBOTS
+        // A Player can either have a playerbotMgr (to manage its bots), or have playerbotAI (if it is a bot), or
+        // neither. Code that enables bots must create the playerbotMgr and set it using SetPlayerbotMgr.
+        void UpdateAI(const uint32 diff, bool minimal = false);
+        void CreatePlayerbotAI();
+        void RemovePlayerbotAI();
+        PlayerbotAI* GetPlayerbotAI() { return m_playerbotAI.get(); }
+        void CreatePlayerbotMgr();
+        void RemovePlayerbotMgr();
+        PlayerbotMgr* GetPlayerbotMgr() { return m_playerbotMgr.get(); }
+        void SetBotDeathTimer() { m_deathTimer = 0; }
+        bool isRealPlayer() { return m_session && (m_session->GetRemoteAddress() != "disconnected/bot"); }
+#endif
+
         virtual UnitAI* AI() override { if (m_charmInfo) return m_charmInfo->GetAI(); return nullptr; }
         virtual CombatData* GetCombatData() override { if (m_charmInfo && m_charmInfo->GetCombatData()) return m_charmInfo->GetCombatData(); return m_combatData; }
         virtual CombatData const* GetCombatData() const override { if (m_charmInfo && m_charmInfo->GetCombatData()) return m_charmInfo->GetCombatData(); return m_combatData; }
 
         void SendLootError(ObjectGuid guid, LootError error) const;
+
+        void SetDeathPrevention(bool enable);
+        bool IsPreventingDeath() const override;
 
         // cooldown system
         virtual void AddGCD(SpellEntry const& spellEntry, uint32 forcedDuration = 0, bool updateClient = false) override;
@@ -2579,6 +2609,11 @@ class Player : public Unit
 #ifdef BUILD_DEPRECATED_PLAYERBOT
         PlayerbotAI* m_playerbotAI;
         PlayerbotMgr* m_playerbotMgr;
+#endif
+
+#ifdef ENABLE_PLAYERBOTS
+        std::unique_ptr<PlayerbotAI> m_playerbotAI;
+        std::unique_ptr<PlayerbotMgr> m_playerbotMgr;
 #endif
 
         // Homebind coordinates

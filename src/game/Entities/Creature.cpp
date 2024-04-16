@@ -2346,6 +2346,16 @@ void Creature::UpdateSpell(int32 index, int32 newSpellId)
 
 void Creature::SetSpellList(uint32 spellSet)
 {
+    if (spellSet == 0)
+    {
+        m_spellList.Disabled = true;
+        m_spellList.Spells.clear();
+
+        if (AI())
+            AI()->SpellListChanged();
+        return;
+    }
+
     // Try difficulty dependent version before falling back to base entry
     auto spellList = GetMap()->GetMapDataContainer().GetCreatureSpellList(spellSet);
     if (!spellList)
@@ -3048,7 +3058,7 @@ void Creature::AddCooldown(SpellEntry const& spellEntry, ItemPrototype const* /*
                 // send to client
                 WorldPacket data(SMSG_SPELL_COOLDOWN, 8 + 1 + 4);
                 data << GetObjectGuid();
-                data << uint8(1);
+                data << uint8(SPELL_COOLDOWN_FLAG_INCLUDE_GCD);
                 data << uint32(spellEntry.Id);
                 data << uint32(recTime);
                 player->GetSession()->SendPacket(data);

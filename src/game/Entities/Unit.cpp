@@ -660,7 +660,7 @@ bool Unit::UpdateMeleeAttackingState()
         swingError = SWING_ERROR_BAD_FACING;
     else if (!victim->IsAlive())
         swingError = SWING_ERROR_TARGET_NOT_ALIVE;
-    else if (!CanAttackInCombat(victim))
+    else if (!CanAttackInCombat(victim, false, false))
         swingError = SWING_ERROR_CANT_ATTACK_TARGET;
     else
     {
@@ -2735,7 +2735,7 @@ void Unit::AttackerStateUpdate(Unit* pVictim, WeaponAttackType attType, bool ext
 
     SendAttackStateUpdate(&meleeDamageInfo);
     DealMeleeDamage(&meleeDamageInfo, true);
-    ProcDamageAndSpell(ProcSystemArguments(this, meleeDamageInfo.target, meleeDamageInfo.procAttacker, meleeDamageInfo.procVictim, meleeDamageInfo.procEx, meleeDamageInfo.totalDamage, meleeDamageInfo.attackType));
+    ProcDamageAndSpell(ProcSystemArguments(this, meleeDamageInfo.target, meleeDamageInfo.procAttacker, meleeDamageInfo.procVictim, meleeDamageInfo.procEx, meleeDamageInfo.totalDamage, meleeDamageInfo.absorb, meleeDamageInfo.attackType));
 
     uint32 totalAbsorb = 0;
     uint32 totalResist = 0;
@@ -7312,11 +7312,9 @@ void Unit::EnergizeBySpell(Unit* victim, SpellEntry const* spellInfo, uint32 dam
  */
 int32 Unit::SpellBonusWithCoeffs(SpellEntry const* spellInfo, SpellEffectIndex effectIndex, int32 total, int32 benefit, int32 ap_benefit,  DamageEffectType damagetype, bool donePart)
 {
-    // Distribute Damage over multiple effects, reduce by AoE
-    float coeff = 1.0f;
-
-    // Not apply this to creature casted spells
-    if (GetTypeId() == TYPEID_UNIT && !((Creature*)this)->IsPet())
+    float coeff = 0.f; // no coefficient by default
+    // does not apply to creatures
+    if (IsCreature() && !IsPlayerControlled())
         coeff = 1.0f;
     // Check for table values
     if (spellInfo->effectBonusCoefficient[effectIndex] > 0 || spellInfo->effectBonusCoefficientFromAP[effectIndex] > 0)
@@ -7329,9 +7327,6 @@ int32 Unit::SpellBonusWithCoeffs(SpellEntry const* spellInfo, SpellEffectIndex e
             total += int32(ap_bonus * (GetTotalAttackPowerValue(IsSpellRequiresRangedAP(spellInfo) ? RANGED_ATTACK : BASE_ATTACK) + ap_benefit));
         }
     }
-    // Default calculation
-    else if (benefit)
-        coeff = CalculateDefaultCoefficient(spellInfo, damagetype);
 
     if (benefit)
     {
@@ -11630,6 +11625,8 @@ Unit* Unit::TakePossessOf(SpellEntry const* spellEntry, SummonPropertiesEntry co
     if (player)
     {
         // Initialize pet bar
+        if (uint32 charmedSpellList = possessed->GetCreatureInfo()->CharmedSpellList)
+            possessed->SetSpellList(charmedSpellList);
         charmInfo->InitPossessCreateSpells();
         player->PossessSpellInitialize();
 
@@ -11697,6 +11694,9 @@ bool Unit::TakePossessOf(Unit* possessed)
         charmInfo->SetCharmState("PossessedAI");
         possessedCreature->SetWalk(IsWalking(), true);
         getHostileRefManager().deleteReference(possessedCreature);
+
+        if (uint32 charmedSpellList = possessedCreature->GetCreatureInfo()->CharmedSpellList)
+            possessedCreature->SetSpellList(charmedSpellList);
     }
     else if (possessed->GetTypeId() == TYPEID_PLAYER)
     {
@@ -11802,7 +11802,7 @@ bool Unit::TakeCharmOf(Unit* charmed, uint32 spellId, bool advertised /*= true*/
 
     Position combatStartPosition;
 
-    if (charmed->GetTypeId() == TYPEID_PLAYER)
+    if (charmed->IsPlayer())
     {
         Player* charmedPlayer = static_cast<Player*>(charmed);
         if (charmerPlayer && charmerPlayer->IsInDuelWith(charmedPlayer))
@@ -11826,7 +11826,7 @@ bool Unit::TakeCharmOf(Unit* charmed, uint32 spellId, bool advertised /*= true*/
 
         charmedPlayer->SendForcedObjectUpdate();
     }
-    else if (charmed->GetTypeId() == TYPEID_UNIT)
+    else if (charmed->IsCreature())
     {
         Creature* charmedCreature = static_cast<Creature*>(charmed);
 
@@ -11842,6 +11842,9 @@ bool Unit::TakeCharmOf(Unit* charmed, uint32 spellId, bool advertised /*= true*/
         getHostileRefManager().deleteReference(charmedCreature);
 
         charmedCreature->SetFactionTemporary(GetFaction(), TEMPFACTION_NONE);
+
+        if (uint32 charmedSpellList = charmedCreature->GetCreatureInfo()->CharmedSpellList)
+            charmedCreature->SetSpellList(charmedSpellList);
 
         if (isPossessCharm)
             charmInfo->InitPossessCreateSpells();
@@ -12025,7 +12028,7 @@ void Unit::Uncharm(Unit* charmed, uint32 spellId)
     // TODO: maybe should be done on HomeMovementGenerator::MovementExpires
     charmed->GetCombatManager().SetEvadeState(EVADE_NONE);
 
-    if (charmed->GetTypeId() == TYPEID_UNIT)
+    if (charmed->IsCreature())
     {
         // now we have to clean threat list to be able to restore normal creature behavior
         Creature* charmedCreature = static_cast<Creature*>(charmed);
@@ -12057,9 +12060,12 @@ void Unit::Uncharm(Unit* charmed, uint32 spellId)
             charmed->DeleteCharmInfo();
         }
 
+        if (charmedCreature->GetCreatureInfo()->CharmedSpellList)
+            charmedCreature->SetSpellList(charmedCreature->GetCreatureInfo()->SpellList);
+
         charmed->SetTarget(charmed->GetVictim());
     }
-    else if (charmed->GetTypeId() == TYPEID_PLAYER)
+    else if (charmed->IsPlayer())
     {
         charmed->AttackStop(true, true);
 
