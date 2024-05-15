@@ -93,7 +93,8 @@ struct CreatureInfo
     uint32  MinLevel;
     uint32  MaxLevel;
     uint32  HeroicEntry;
-    uint32  ModelId[MAX_CREATURE_MODEL];
+    uint32  DisplayId[MAX_CREATURE_MODEL];
+    uint32  DisplayIdProbability[MAX_CREATURE_MODEL];
     uint32  Faction;
     float   Scale;
     uint32  Family;                                        // enum CreatureFamily values (optional)
@@ -126,6 +127,11 @@ struct CreatureInfo
     float   DamageVariance;
     float   ArmorMultiplier;
     float   ExperienceMultiplier;
+    float   StrengthMultiplier;
+    float   AgilityMultiplier;
+    float   StaminaMultiplier;
+    float   IntellectMultiplier;
+    float   SpiritMultiplier;
     uint32  MinLevelHealth;
     uint32  MaxLevelHealth;
     uint32  MinLevelMana;
@@ -299,6 +305,11 @@ struct CreatureClassLvlStats
     float   BaseMeleeAttackPower;
     float   BaseRangedAttackPower;
     uint32  BaseArmor;
+    uint32  Strength;
+    uint32  Agility;
+    uint32  Stamina;
+    uint32  Intellect;
+    uint32  Spirit;
 };
 
 struct CreatureModelInfo
@@ -672,10 +683,11 @@ class Creature : public Unit
         bool UpdateAllStats() override;
         void UpdateResistances(uint32 school) override;
         void UpdateArmor() override;
-        void UpdateMaxHealth() override;
-        void UpdateMaxPower(Powers power) override;
         void UpdateAttackPowerAndDamage(bool ranged = false) override;
         void UpdateDamagePhysical(WeaponAttackType attType) override;
+        virtual float GetConditionalTotalPhysicalDamageModifier(WeaponAttackType type) const;
+        float GetHealthBonusFromStamina() const override;
+
         uint32 GetCurrentEquipmentId() const { return m_equipmentId; }
 
         static float _GetHealthMod(int32 Rank);             ///< Get custom factor to scale health (default 1, CONFIG_FLOAT_RATE_CREATURE_*_HP)

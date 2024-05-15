@@ -674,37 +674,25 @@ uint32 Creature::ChooseDisplayId(const CreatureInfo* cinfo, const CreatureData* 
 
     // use defaults from the template
     uint32 display_id = 0;
+    // pick based on probability
+    uint32 chanceTotal = 0;
+    for (uint32 i = 0; i < MAX_CREATURE_MODEL; ++i)
+        if (cinfo->DisplayId[i])
+            chanceTotal += cinfo->DisplayIdProbability[i];
 
-    // models may be categorized as (in this order):
-    // if mod4 && mod3 && mod2 && mod1  use any, by 25%-chance (other gender is selected and replaced after this function)
-    // if mod3 && mod2 && mod1          use mod3 unless mod2 has modelid_alt_model (then all by 33%-chance)
-    // if mod2                          use mod2 unless mod2 has modelid_alt_model (then both by 50%-chance)
-    // if mod1                          use mod1
-
-    // The follow decision tree needs to be updated if MAX_CREATURE_MODEL is changed.
-    static_assert(MAX_CREATURE_MODEL == 4, "Need to update model selection code for new or removed model fields");
-
-    // model selected here may be replaced with other_gender using own function
-    if (cinfo->ModelId[3] && cinfo->ModelId[2] && cinfo->ModelId[1] && cinfo->ModelId[0])
+    int32 roll = irand(0, std::max(int32(chanceTotal) - 1, 0)); // avoid 0
+    for (uint32 i = 0; i < MAX_CREATURE_MODEL; ++i)
     {
-        display_id = cinfo->ModelId[urand(0, 3)];
-    }
-    else if (cinfo->ModelId[2] && cinfo->ModelId[1] && cinfo->ModelId[0])
-    {
-        uint32 modelid_tmp = sObjectMgr.GetCreatureModelAlternativeModel(cinfo->ModelId[1]);
-        display_id = modelid_tmp ? cinfo->ModelId[urand(0, 2)] : cinfo->ModelId[2];
-    }
-    else if (cinfo->ModelId[1])
-    {
-        // We use this to eliminate invisible models vs. "dummy" models (infernals, etc).
-        // Where it's expected to select one of two, model must have a alternative model defined (alternative model is normally the same as defined in ModelId1).
-        // Same pattern is used in the above model selection, but the result may be ModelId3 and not ModelId2 as here.
-        uint32 modelid_tmp = sObjectMgr.GetCreatureModelAlternativeModel(cinfo->ModelId[1]);
-        display_id = modelid_tmp ? cinfo->ModelId[urand(0, 1)] : cinfo->ModelId[1];
-    }
-    else if (cinfo->ModelId[0])
-    {
-        display_id = cinfo->ModelId[0];
+        if (cinfo->DisplayId[i])
+        {
+            if (roll < cinfo->DisplayIdProbability[i])
+            {
+                display_id = cinfo->DisplayId[i];
+                break;
+            }
+            else
+                roll -= cinfo->DisplayIdProbability[i];
+        }
     }
 
     // fail safe, we use creature entry 1 and make error
@@ -713,7 +701,7 @@ uint32 Creature::ChooseDisplayId(const CreatureInfo* cinfo, const CreatureData* 
         sLog.outErrorDb("Call customer support, ChooseDisplayId can not select native model for creature entry %u, model from creature entry 1 will be used instead.", cinfo->Entry);
 
         if (const CreatureInfo* creatureDefault = ObjectMgr::GetCreatureTemplate(1))
-            display_id = creatureDefault->ModelId[0];
+            display_id = creatureDefault->DisplayId[0];
     }
 
     return display_id;
@@ -1221,12 +1209,12 @@ void Creature::SaveToDB(uint32 mapid, uint8 spawnMask)
         // The following if-else assumes that there are 4 model fields and needs updating if this is changed.
         static_assert(MAX_CREATURE_MODEL == 4, "Need to update custom model check for new/removed model fields.");
 
-        if (displayId != cinfo->ModelId[0] && displayId != cinfo->ModelId[1] &&
-                displayId != cinfo->ModelId[2] && displayId != cinfo->ModelId[3])
+        if (displayId != cinfo->DisplayId[0] && displayId != cinfo->DisplayId[1] &&
+                displayId != cinfo->DisplayId[2] && displayId != cinfo->DisplayId[3])
         {
             for (int i = 0; i < MAX_CREATURE_MODEL && displayId; ++i)
-                if (cinfo->ModelId[i])
-                    if (CreatureModelInfo const* minfo = sObjectMgr.GetCreatureModelInfo(cinfo->ModelId[i]))
+                if (cinfo->DisplayId[i])
+                    if (CreatureModelInfo const* minfo = sObjectMgr.GetCreatureModelInfo(cinfo->DisplayId[i]))
                         if (displayId == minfo->modelid_other_gender)
                             displayId = 0;
         }
@@ -1310,6 +1298,15 @@ void Creature::SelectLevel(uint32 forcedLevel /*= USE_DEFAULT_DATABASE_LEVEL*/)
     float meleeAttackPwr = 0.f;
     float rangedAttackPwr = 0.f;
 
+    float healthMultiplier = 1.f;
+    float powerMultiplier = 1.f;
+
+    float strength = 0.f;
+    float agility = 0.f;
+    float stamina = 0.f;
+    float intellect = 0.f;
+    float spirit = 0.f;
+
     float damageMod = _GetDamageMod(rank);
     float damageMulti = cinfo->DamageMultiplier * damageMod;
     bool usedDamageMulti = false;
@@ -1318,13 +1315,17 @@ void Creature::SelectLevel(uint32 forcedLevel /*= USE_DEFAULT_DATABASE_LEVEL*/)
     {
         // Use Creature Stats to calculate stat values
 
-        // health
         if (cinfo->HealthMultiplier >= 0)
-            health = std::round(cCLS->BaseHealth * cinfo->HealthMultiplier);
+            health = cCLS->BaseHealth;
+        // health
+        if (cinfo->HealthMultiplier > 0)
+            healthMultiplier = cinfo->HealthMultiplier;
 
-        // mana
         if (cinfo->PowerMultiplier >= 0)
-            mana = std::round(cCLS->BaseMana * cinfo->PowerMultiplier);
+            mana = cCLS->BaseMana;
+        // mana
+        if (cinfo->PowerMultiplier > 0)
+            powerMultiplier = cinfo->PowerMultiplier;
 
         // armor
         if (cinfo->ArmorMultiplier >= 0)
@@ -1345,6 +1346,18 @@ void Creature::SelectLevel(uint32 forcedLevel /*= USE_DEFAULT_DATABASE_LEVEL*/)
             meleeAttackPwr = cCLS->BaseMeleeAttackPower;
             rangedAttackPwr = cCLS->BaseRangedAttackPower;
         }
+
+        // attributes
+        if (cinfo->StrengthMultiplier >= 0)
+            strength = cCLS->Strength * cinfo->StrengthMultiplier;
+        if (cinfo->AgilityMultiplier >= 0)
+            agility = cCLS->Agility * cinfo->AgilityMultiplier;
+        if (cinfo->StaminaMultiplier >= 0)
+            stamina = cCLS->Stamina * cinfo->StaminaMultiplier;
+        if (cinfo->IntellectMultiplier >= 0)
+            intellect = cCLS->Intellect * cinfo->IntellectMultiplier;
+        if (cinfo->SpiritMultiplier >= 0)
+            spirit = cCLS->Spirit * cinfo->SpiritMultiplier;
     }
 
     if (!usedDamageMulti || health == -1 || mana == -1 || armor == -1.f) // some field needs to default to old db fields
@@ -1410,7 +1423,6 @@ void Creature::SelectLevel(uint32 forcedLevel /*= USE_DEFAULT_DATABASE_LEVEL*/)
     // health
     SetCreateHealth(health);
     SetMaxHealth(health);
-    SetHealth(health);
 
     // all power types
     for (int i = POWER_MANA; i <= POWER_HAPPINESS; ++i)
@@ -1434,7 +1446,6 @@ void Creature::SelectLevel(uint32 forcedLevel /*= USE_DEFAULT_DATABASE_LEVEL*/)
 
         // Mana requires an extra field to be set
         SetMaxPower(Powers(i), maxValue);
-        SetPower(Powers(i), value);
 
         if (i == POWER_MANA)
             SetCreateMana(value);
@@ -1457,7 +1468,22 @@ void Creature::SelectLevel(uint32 forcedLevel /*= USE_DEFAULT_DATABASE_LEVEL*/)
     SetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE, meleeAttackPwr * damageMod);
     SetModifierValue(UNIT_MOD_ATTACK_POWER_RANGED, BASE_VALUE, rangedAttackPwr * damageMod);
 
+    // primary attributes
+    SetCreateStat(STAT_STRENGTH, strength);
+    SetCreateStat(STAT_AGILITY, agility);
+    SetCreateStat(STAT_STAMINA, stamina);
+    SetCreateStat(STAT_INTELLECT, intellect);
+    SetCreateStat(STAT_SPIRIT, spirit);
+
+    // multipliers
+    SetModifierValue(UNIT_MOD_HEALTH, TOTAL_PCT, healthMultiplier);
+    SetModifierValue(UnitMods(UNIT_MOD_MANA + (int)GetPowerType()), TOTAL_PCT, powerMultiplier);
+
     UpdateAllStats();
+
+    SetHealth(GetMaxHealth());
+    for (int i = POWER_MANA; i <= POWER_HAPPINESS; ++i)
+        SetPower(Powers(i), GetMaxPower(Powers(i)));
 }
 
 float Creature::_GetHealthMod(int32 Rank)
