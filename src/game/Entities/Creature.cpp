@@ -685,7 +685,7 @@ uint32 Creature::ChooseDisplayId(const CreatureInfo* cinfo, const CreatureData* 
     {
         if (cinfo->DisplayId[i])
         {
-            if (roll < cinfo->DisplayIdProbability[i])
+            if (roll < int32(cinfo->DisplayIdProbability[i]))
             {
                 display_id = cinfo->DisplayId[i];
                 break;
@@ -2997,6 +2997,17 @@ void Creature::SetCanDualWield(bool state)
 {
     Unit::SetCanDualWield(state);
     UpdateDamagePhysical(OFF_ATTACK);
+}
+
+Unit::MmapForcingStatus Creature::IsIgnoringMMAP() const
+{
+    if (m_ignoreMMAP)
+        return MmapForcingStatus::IGNORED;
+
+    if (GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_MMAP_FORCE_ENABLE)
+        return MmapForcingStatus::FORCED;
+
+    return Unit::IsIgnoringMMAP();
 }
 
 bool Creature::CanRestockPickpocketLoot() const

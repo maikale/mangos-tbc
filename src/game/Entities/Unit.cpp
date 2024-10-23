@@ -617,8 +617,18 @@ void Unit::TriggerHomeEvents()
             GetMap()->GetCreatureLinkingHolder()->TryFollowMaster((Creature*)this);
     }
 
-    if (IsCreature() && static_cast<Creature*>(this)->GetCreatureGroup())
-        static_cast<Creature*>(this)->GetCreatureGroup()->TriggerLinkingEvent(CREATURE_GROUP_EVENT_HOME, this);
+    if (IsCreature())
+    {
+        Creature* me = static_cast<Creature*>(this);
+        if (me->GetCreatureGroup())
+            me->GetCreatureGroup()->TriggerLinkingEvent(CREATURE_GROUP_EVENT_HOME, this);
+        if (me->IsPet())
+        {
+            Unit* owner = me->GetOwner();
+            if (!owner->IsAlive() && static_cast<Pet*>(this)->IsGuardian())
+                static_cast<Pet*>(this)->Unsummon(PET_SAVE_REAGENTS);
+        }
+    }
 }
 
 void Unit::EvadeTimerExpired()
@@ -1015,12 +1025,12 @@ uint32 Unit::DealDamage(Unit* dealer, Unit* victim, uint32 damage, CleanDamage c
             duel_hasEnded = true;
         }
 
-        if (dealer->GetTypeId() == TYPEID_PLAYER && dealer != victim)
+        if (dealer->IsPlayer() && dealer != victim)
         {
             Player* killer = static_cast<Player*>(dealer);
 
             // in bg, count dmg if victim is also a player
-            if (victim->GetTypeId() == TYPEID_PLAYER)
+            if (victim->IsPlayer())
             {
                 if (BattleGround* bg = killer->GetBattleGround())
                 {
@@ -7196,10 +7206,10 @@ int32 Unit::DealHeal(Unit* pVictim, uint32 addhealth, SpellEntry const* spellPro
 
     unit->SendHealSpellLog(pVictim, spellProto->Id, addhealth, critical);
 
-    if (unit->GetTypeId() == TYPEID_PLAYER)
+    if (unit->IsPlayer())
     {
-        if (BattleGround* bg = ((Player*)unit)->GetBattleGround())
-            bg->UpdatePlayerScore((Player*)unit, SCORE_HEALING_DONE, gain);
+        if (BattleGround* bg = static_cast<Player*>(unit)->GetBattleGround())
+            bg->UpdatePlayerScore(static_cast<Player*>(unit), SCORE_HEALING_DONE, gain);
     }
 
     // Script Event HealedBy
@@ -12845,6 +12855,14 @@ void Unit::SelectAttackingTargets(std::vector<Unit*>& selectedTargets, Attacking
             sLog.outError("Creature::SelectAttackingTarget> Target have unimplemented value!");
             break;
     }
+}
+
+Unit::MmapForcingStatus Unit::IsIgnoringMMAP() const
+{
+    if (IsPlayer() || IsPlayerControlled())
+        return MmapForcingStatus::FORCED;
+
+    return MmapForcingStatus::DEFAULT;
 }
 
 void Unit::SetLevitate(bool enable)

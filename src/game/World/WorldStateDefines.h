@@ -355,6 +355,25 @@ enum WorldStateID : int32
     // The Arcatraz
     WORLD_STATE_PROTEAN_HORROR     = 5520001,               // Prevents that Protean Horrors respawn
     WORLD_STATE_PROTEAN_NIGHTMARE  = 5520002,               // Prevents that Protean Nightmare respawn
+    
+    // The Slave Pens
+    WORLD_STATE_NATURALIST_BITE    = 5470044,              // Spawns Coilfang Group after freeing Naturalist Bite
+
+    // Sethekk Halls
+    WORLD_STATE_SETHEKK_GROUP_12    = 5560001,              // 2 Possible group versions
+    WORLD_STATE_SETHEKK_GROUP_13    = 5560002,              // 2 Possible group versions
+    WORLD_STATE_SETHEKK_GROUP_14    = 5560003,              // 2 Possible group versions
+    WORLD_STATE_SETHEKK_GROUP_16    = 5560004,              // 2 Possible group versions
+    WORLD_STATE_SETHEKK_GROUP_20    = 5560005,              // 2 Possible group versions
+    WORLD_STATE_SETHEKK_GROUP_21    = 5560006,              // 2 Possible group versions
+
+    // Mana Tombs
+    WORLD_STATE_MANA_TOMBS_GROUP_18 = 5570001,              // 2 Possible group versions
+    WORLD_STATE_MANA_TOMBS_GROUP_20 = 5570002,              // 2 Possible group versions
+    WORLD_STATE_MANA_TOMBS_GROUP_27 = 5570003,              // 2 Possible group versions
+    WORLD_STATE_MANA_TOMBS_GROUP_32 = 5570004,              // 2 Possible group versions
+    WORLD_STATE_MANA_TOMBS_GROUP_34 = 5570005,              // 2 Possible group versions
+    WORLD_STATE_MANA_TOMBS_GROUP_35 = 5570006,              // 2 Possible group versions
 
     // Wotlk
 };
