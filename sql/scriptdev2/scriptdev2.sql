@@ -349,7 +349,6 @@ UPDATE creature_template SET ScriptName='npc_rizzle_sprysprocket' WHERE entry=23
 UPDATE creature_template SET ScriptName='npc_depth_charge' WHERE entry=23025;
 UPDATE gameobject_template SET ScriptName='go_southfury_moonstone' WHERE entry=185566;
 UPDATE creature_template SET ScriptName='mobs_spitelashes' WHERE entry IN (6190,6193,6194,6195,6196);
-UPDATE creature_template SET ScriptName='npc_loramus_thalipedes' WHERE entry=7783;
 UPDATE creature_template SET ScriptName='npc_felhound_tracker' WHERE entry=8668;
 UPDATE creature_template SET ScriptName='boss_maws' WHERE entry=15571;
 UPDATE gameobject_template SET ScriptName='go_lightning' WHERE entry=183356;
@@ -735,6 +734,7 @@ UPDATE creature_template SET ScriptName='npc_kelerun_bloodmourn' WHERE entry=178
 UPDATE gameobject_template SET ScriptName='go_harbinger_second_trial' WHERE entry=182052;
 UPDATE creature_template SET ScriptName='npc_apprentice_mirveda' WHERE entry=15402;
 UPDATE creature_template SET ScriptName='npc_infused_crystal' WHERE entry=16364;
+UPDATE creature_template SET ScriptName='npc_hatchling_movement' WHERE entry IN(21055,21063,21064);
 
 /* FELWOOD */
 UPDATE creature_template SET ScriptName='npc_kitten' WHERE entry=9937;
@@ -1226,7 +1226,6 @@ UPDATE creature_template SET ScriptName='npc_galen_goodward' WHERE entry=5391;
 UPDATE creature_template SET ScriptName='mob_aquementas' WHERE entry=9453;
 UPDATE creature_template SET ScriptName='npc_custodian_of_time' WHERE entry=20129;
 UPDATE creature_template SET ScriptName='npc_oox17tn' WHERE entry=7784;
-UPDATE creature_template SET ScriptName='npc_stone_watcher_of_norgannon' WHERE entry=7918;
 UPDATE creature_template SET ScriptName='npc_tooga' WHERE entry=5955;
 
 /* TELDRASSIL */
