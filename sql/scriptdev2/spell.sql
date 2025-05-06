@@ -39,6 +39,7 @@ INSERT INTO spell_scripts(Id, ScriptName) VALUES
 (26569,'spell_hate_to_zero'),
 (26637,'spell_hate_to_zero'),
 (10255,'spell_stoned'),
+(11920,'spell_net_guard'),
 (12639,'spell_summon_hakkar'),
 (12948,'spell_hakkar_summoned'),
 (13278,'spell_gdr_channel'),
@@ -64,6 +65,7 @@ INSERT INTO spell_scripts(Id, ScriptName) VALUES
 (20038,'spell_explosion_razorgore'),
 (21651,'spell_opening_capping'),
 (22858,'spell_retaliation_creature'),
+(22876,'spell_summon_netherwalker'),
 (23134,'spell_goblin_bomb'),
 (23226,'spell_ritual_candle_aura'),
 (24228,'spell_arlokk_vanish'),
@@ -102,6 +104,8 @@ INSERT INTO spell_scripts(Id, ScriptName) VALUES
 (26275,'spell_wondervolt_trap'),
 (26332,'spell_cthun_mouth_tentacle'),
 (26398,'spell_cthun_tentacles_summon'),
+(26399,'spell_despawn_tentacles'),
+(26404,'spell_despawn_tent_port'),
 (26476,'spell_cthun_digestive_acid_periodic'),
 (26584,'spell_summon_toxic_slime'),
 (26585,'spell_viscidus_despawn_adds'),
@@ -659,6 +663,7 @@ INSERT INTO spell_scripts(Id, ScriptName) VALUES
 (29354,'spell_gameobject_call_for_help_on_usage'), -- Mining (Master)
 (30434,'spell_gameobject_call_for_help_on_usage'), -- Elemental Seaforium Charge
 (34799,'spell_arcane_devastation'),
+(34145,'spell_ritual_of_souls_dummy'),
 (32173,'spell_entangling_roots');
 
 -- Wotlk

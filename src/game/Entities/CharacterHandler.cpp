@@ -882,7 +882,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
 
     pCurrChar->GetSocial()->SendSocialList();
 
-    pCurrChar->SendInitialPacketsAfterAddToMap();
+    pCurrChar->SendInitialPacketsAfterAddToMap(false);
 
     static SqlStatementID updChars;
     static SqlStatementID updAccount;
@@ -995,6 +995,9 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
 
 void WorldSession::HandlePlayerReconnect()
 {
+    // Detect if reconnecting in combat
+    const bool inCombat = _player->IsInCombat();
+
     // stop logout timer if need
     LogoutRequest(0);
 
@@ -1078,18 +1081,7 @@ void WorldSession::HandlePlayerReconnect()
     if (group)
         group->SendUpdateTo(_player);
 
-    _player->GetSocial()->SendSocialList();
-    uint32 areaId = 0;
-    uint32 zoneId = 0;
-    _player->GetZoneAndAreaId(zoneId, areaId);
-    _player->SendInitWorldStates(zoneId, areaId);
-    _player->GetSession()->ResetTimeSync();
-    _player->GetSession()->SendTimeSync();
-    _player->SendAllSpellMods(SPELLMOD_FLAT);
-    _player->SendAllSpellMods(SPELLMOD_PCT);
-    _player->CastSpell(_player, 836, TRIGGERED_OLD_TRIGGERED);       // LOGINEFFECT
-    _player->SendEnchantmentDurations();                             // must be after add to map
-    _player->SendItemDurations();                                    // must be after add to map
+    _player->SendInitialPacketsAfterAddToMap(true);
 
     // Send friend list online status for other players
     sSocialMgr.SendFriendStatus(_player, FRIEND_ONLINE, _player->GetObjectGuid(), true);
@@ -1118,9 +1110,6 @@ void WorldSession::HandlePlayerReconnect()
     sLog.outChar("Account: %d (IP: %s) Login Character:[%s] (guid: %u)",
         GetAccountId(), IP_str.c_str(), _player->GetName(), _player->GetGUIDLow());
 
-    // sync client auras timer
-    _player->UpdateClientAuras();
-
     // sync client control (if taxi flying the client is already sync)
     if (_player->IsTaxiFlying())
         _player->TaxiFlightResume(true);
@@ -1138,6 +1127,10 @@ void WorldSession::HandlePlayerReconnect()
 
     // Undo flags and states set by logout if present:
     _player->SetStunnedByLogout(false);
+
+    // Mark self for unit flags update to ensure re-application of combat flag at own client
+    if (inCombat)
+        _player->ForceValuesUpdateAtIndex(UNIT_FIELD_FLAGS);
 
     m_playerLoading = false;
 }

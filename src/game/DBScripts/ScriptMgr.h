@@ -255,7 +255,7 @@ struct ScriptInfo
         struct                                              // SCRIPT_COMMAND_REMOVE_AURA (14)
         {
             uint32 spellId;                                 // datalong
-            uint32 empty;                                   // datalong2
+            uint32 defaultOrChargeOrStack;                  // datalong2
         } removeAura;
 
         struct                                              // SCRIPT_COMMAND_CAST_SPELL (15)
@@ -575,6 +575,7 @@ struct ScriptInfo
         {
             case SCRIPT_COMMAND_MOVE_TO:
             case SCRIPT_COMMAND_TEMP_SPAWN_CREATURE:
+            case SCRIPT_COMMAND_REMOVE_AURA:
             case SCRIPT_COMMAND_ACTIVATE_OBJECT:
             case SCRIPT_COMMAND_CAST_SPELL:
             case SCRIPT_COMMAND_PLAY_SOUND:

@@ -334,8 +334,6 @@ HostileReference* ThreatContainer::selectNextVictim(Unit* attacker, HostileRefer
 {
     HostileReference* currentRef = nullptr;
     bool found = false;
-    bool onlySecondChoiceTargetsFound = false;
-    bool checkedCurrentVictim = false;
     bool suppressRanged = attacker->IsIgnoringRangedTargets();
     bool currentVictimInMelee = true;
     if (suppressRanged && currentVictim)
@@ -468,7 +466,7 @@ void ThreatManager::addThreat(Unit* victim, float threat, bool crit, SpellSchool
 
     float calculatedThreat = ThreatCalcHelper::CalcThreat(victim, iOwner, threat, crit, schoolMask, threatSpell, assist);
 
-    if (calculatedThreat > 0.0f)
+    if (calculatedThreat > 0.0f && !iOwner->IsIgnoringMisdirection())
     {
         if (Unit* redirectedTarget = victim->getHostileRefManager().GetThreatRedirectionTarget())
         {

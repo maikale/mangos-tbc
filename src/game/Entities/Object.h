@@ -461,6 +461,13 @@ class Object
             return *(((uint16*)&m_uint32Values[ index ]) + offset);
         }
 
+        int16 GetInt16Value(uint16 index, uint8 offset) const
+        {
+            MANGOS_ASSERT(index < m_valuesCount || PrintIndexError(index, false));
+            MANGOS_ASSERT(offset < 2);
+            return *(((uint16*)&m_uint32Values[index]) + offset);
+        }
+
         ObjectGuid const& GetGuidValue(uint16 index) const { return *reinterpret_cast<ObjectGuid const*>(&GetUInt64Value(index)); }
 
         void SetInt32Value(uint16 index,        int32  value);
@@ -1211,6 +1218,8 @@ class WorldObject : public Object
 
         bool HasStringId(uint32 stringId) const; // not to be used in sd2
         void SetStringId(uint32 stringId, bool apply); // not to be used outside of scriptmgr
+
+        virtual uint32 GetRespawnDelay() const { return 0; }
 
     protected:
         explicit WorldObject();

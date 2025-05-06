@@ -378,7 +378,7 @@ void WorldState::SaveHelper(std::string& stringToSave, SaveIds saveId)
     CharacterDatabase.PExecute("INSERT INTO world_state(Id,Data) VALUES('%u','%s')", saveId, stringToSave.data());
 }
 
-void WorldState::HandleGameObjectUse(GameObject* go, Unit* user)
+void WorldState::HandleGameObjectUse(GameObject* go, Unit* /*user*/)
 {
     switch (go->GetEntry())
     {
@@ -435,7 +435,7 @@ void WorldState::HandleGameObjectUse(GameObject* go, Unit* user)
     }
 }
 
-void WorldState::HandleGameObjectRevertState(GameObject* go)
+void WorldState::HandleGameObjectRevertState(GameObject* /*go*/)
 {
 
 }
