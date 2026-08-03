@@ -40,6 +40,7 @@
 #include "Weather/Weather.h"
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
 #include "BattleGround/BattleGroundMgr.h"
+#include "Progression/ProgressionMgr.h"
 
 #ifdef BUILD_METRICS
  #include "Metric/Metric.h"
@@ -1888,6 +1889,24 @@ void DungeonMap::InitVisibilityDistance()
 */
 bool DungeonMap::Add(Player* player)
 {
+    // Progression raid gating
+    if (i_mapEntry && i_mapEntry->IsRaid())
+    {
+        sLog.outString(
+            "Progression Check MapID: %u",
+            GetId());
+
+        if (!sProgressionMgr->IsRaidUnlocked(GetId()))
+        {
+            player->GetSession()->SendNotification(
+                "%s is not available yet. Current phase: %u. Required phase: %u.",
+                sProgressionMgr->GetRaidName(GetId()),
+                sProgressionMgr->GetCurrentPhase(),
+                sProgressionMgr->GetRequiredPhase(GetId()));
+
+            return false;
+        }
+    }
     // TODO: Not sure about checking player level: already done in HandleAreaTriggerOpcode
     // GMs still can teleport player in instance.
     // Is it needed?

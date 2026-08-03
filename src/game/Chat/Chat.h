@@ -98,6 +98,7 @@ class ChatHandler
 
         static bool HasEscapeSequences(const char* message);
         static bool CheckEscapeSequences(const char* message);
+        bool HandleProgressionPhaseCommand(char* args);
 
         bool HasSentErrorMessage() const { return sentErrorMessage; }
 

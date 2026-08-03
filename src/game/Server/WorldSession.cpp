@@ -886,13 +886,24 @@ void WorldSession::SendMotd()
     std::string token;
 
     std::string motd = sWorld.GetMotd();
+
+    if (sProgressionMgr && sProgressionMgr->IsEnabled())
+    {
+        motd += "@";
+        motd += "Current Progression: Phase ";
+
+        motd += std::to_string(sProgressionMgr->GetCurrentPhase());
+        motd += " - ";
+        motd += sProgressionMgr->GetPhaseName();
+    }
+
     std::istringstream ss(motd);
 
     while (std::getline(ss, token, '@'))
         lines.push_back(token);
 
     WorldPacket data(SMSG_MOTD, 4);
-    data << (uint32) lines.size();
+    data << (uint32)lines.size();
 
     for (const std::string& line : lines)
         data << line;
@@ -901,6 +912,7 @@ void WorldSession::SendMotd()
 
     DEBUG_LOG("WORLD: Sent motd (SMSG_MOTD)");
 }
+
 
 void WorldSession::SendOfflineNameQueryResponses()
 {

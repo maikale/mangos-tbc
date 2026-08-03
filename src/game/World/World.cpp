@@ -68,6 +68,7 @@
 #include "Maps/TransportMgr.h"
 #include "Anticheat/Anticheat.hpp"
 #include "Spells/SpellStacking.h"
+#include "Progression/ProgressionMgr.h"
 
 #ifdef BUILD_AHBOT
  #include "AuctionHouseBot/AuctionHouseBot.h"
@@ -855,6 +856,10 @@ void World::LoadConfigSettings(bool reload)
     sLog.outString("WORLD: VMap support included. LineOfSight:%i, getHeight:%i, indoorCheck:%i",
                    enableLOS, enableHeight, getConfig(CONFIG_BOOL_VMAP_INDOOR_CHECK) ? 1 : 0);
     sLog.outString("WORLD: VMap data directory is: %svmaps", m_dataPath.c_str());
+	
+	sLog.outString("Loading Progression System...");
+    sProgressionMgr->Load();
+    sLog.outString();
 
     setConfig(CONFIG_BOOL_MMAP_ENABLED, "mmap.enabled", true);
     std::string ignoreMapIds = sConfig.GetStringDefault("mmap.ignoreMapIds");
@@ -1510,6 +1515,8 @@ void World::SetInitialWorldSettings()
     sLog.outString("SERVER STARTUP TIME: %i minutes %i seconds", uStartInterval / 60000, (uStartInterval % 60000) / 1000);
     sLog.outString();
 }
+
+
 
 void World::DetectDBCLang()
 {

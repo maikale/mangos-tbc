@@ -47,6 +47,7 @@
 #include "Movement/MoveSplineInit.h"
 #include "Entities/CreatureLinkingMgr.h"
 #include "Maps/SpawnManager.h"
+#include "Progression/ProgressionMgr.h"
 
 // apply implementation of the singletons
 #include "Policies/Singleton.h"
@@ -200,6 +201,20 @@ void Creature::AddToWorld()
     }
 
     Unit::AddToWorld();
+
+    // =========================================
+    // Progression Vendor Unlock System
+    // =========================================
+
+    if (sProgressionMgr &&
+        GetCreatureInfo() &&
+        (GetCreatureInfo()->NpcFlags & UNIT_NPC_FLAG_VENDOR))
+    {
+        if (!sProgressionMgr->IsVendorUnlocked(GetEntry()))
+        {
+            SetVisibility(VISIBILITY_OFF);
+        }
+    }
 
     // Make active if required
     if (sWorld.isForceLoadMap(GetMapId()) || (GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_ACTIVE))

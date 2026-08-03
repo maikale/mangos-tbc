@@ -33,6 +33,7 @@
 #include "Multithreading/Messager.h"
 #include "LFG/LFGDefines.h"
 #include "BattleGround/BattleGroundDefines.h"
+#include "Progression/ProgressionMgr.h"
 
 #include <atomic>
 #include <map>

@@ -39,6 +39,7 @@
 #include "Tools/Language.h"
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
 #include "Anticheat/Anticheat.hpp"
+#include "Progression/ProgressionMgr.h"
 
 #ifdef BUILD_DEPRECATED_PLAYERBOT
 #include "PlayerBot/Base/PlayerbotMgr.h"

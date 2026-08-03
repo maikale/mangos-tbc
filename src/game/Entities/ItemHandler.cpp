@@ -26,6 +26,7 @@
 #include "Entities/Item.h"
 #include "Entities/UpdateData.h"
 #include "Chat/Chat.h"
+#include "Progression/ProgressionMgr.h"
 
 void WorldSession::HandleSplitItemOpcode(WorldPacket& recv_data)
 {
@@ -764,6 +765,13 @@ void WorldSession::SendListInventory(ObjectGuid vendorguid) const
         if (crItem)
         {
             uint32 itemId = crItem->item;
+
+            if (!sProgressionMgr->IsVendorItemUnlocked(
+                    pCreature->GetEntry(),
+                    itemId))
+            {
+                continue;
+            }
             ItemPrototype const* pProto = ObjectMgr::GetItemPrototype(itemId);
             if (pProto)
             {

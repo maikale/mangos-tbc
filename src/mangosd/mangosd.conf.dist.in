@@ -95,6 +95,12 @@ BindIP = "0.0.0.0"
 SD2ErrorLogFile = "SD2Errors.log"
 Spawns.ZoneArea = 0
 
+#
+# Progression
+#
+Progression.Enabled = 1
+Progression.Phase = 1
+
 ###################################################################################################################
 # PERFORMANCE SETTINGS
 #

@@ -67,7 +67,7 @@
 #include "World/WorldStateExpression.h"
 
 #include "MotionGenerators/MoveMap.h"
-
+#include "Progression/ProgressionMgr.h"
 #ifdef BUILD_AHBOT
 #include "AuctionHouseBot/AuctionHouseBot.h"
 
@@ -228,7 +228,7 @@ bool ChatHandler::HandleReloadAllLootCommand(char* /*args*/)
 bool ChatHandler::HandleReloadAllNpcCommand(char* args)
 {
     if (*args != 'a')                                       // will be reloaded from all_gossips
-        HandleReloadNpcGossipCommand((char*)"a");
+    HandleReloadNpcGossipCommand((char*)"a");
     HandleReloadNpcTrainerCommand((char*)"a");
     HandleReloadNpcVendorCommand((char*)"a");
     HandleReloadPointsOfInterestCommand((char*)"a");
@@ -4765,6 +4765,30 @@ bool ChatHandler::HandleServerShutDownCommand(char* args)
         return false;
 
     sWorld.ShutdownServ(delay, 0, exitcode);
+    return true;
+}
+
+bool ChatHandler::HandleProgressionPhaseCommand(char* args)
+{
+    uint32 phase;
+
+    if (!ExtractUInt32(&args, phase))
+        return false;
+
+    if (phase < 1 || phase > 5)
+    {
+        PSendSysMessage(
+            "Usage: .progression phase <1-5>");
+
+        return true;
+    }
+
+    sProgressionMgr->SetPhase(phase);
+
+    PSendSysMessage(
+        "Progression Phase changed to %u",
+        phase);
+
     return true;
 }
 

@@ -209,6 +209,7 @@ ChatCommand* ChatHandler::getCommandTable()
         { nullptr,          0,                  false, nullptr,                                             "", nullptr }
     };
 
+
     static ChatCommand debugScriptCommandTable[] =
     {
         { "help",           SEC_GAMEMASTER,     false, &ChatHandler::HandleSD2HelpCommand,                  "", nullptr },
@@ -438,6 +439,15 @@ ChatCommand* ChatHandler::getCommandTable()
         { "tele",           SEC_MODERATOR,      true,  &ChatHandler::HandleLookupTeleCommand,          "", nullptr },
         { "title",          SEC_GAMEMASTER,     true,  &ChatHandler::HandleLookupTitleCommand,         "", nullptr },
         { nullptr,          0,                  false, nullptr,                                        "", nullptr }
+    };
+
+    static ChatCommand level3CommandTable[] =
+        {
+            {"progression", SEC_GAMEMASTER,    false, &ChatHandler::HandleProgressionPhaseCommand, "", nullptr           },
+
+            {"server",      SEC_ADMINISTRATOR, false, nullptr,                                     "", nullptr           },
+
+            {nullptr,       0,                 false, nullptr,                                     "", nullptr           }
     };
 
     static ChatCommand lootCommandTable[] =
@@ -819,6 +829,7 @@ ChatCommand* ChatHandler::getCommandTable()
         { "restart",        SEC_ADMINISTRATOR,  true,  nullptr,                                        "", serverRestartCommandTable },
         { "shutdown",       SEC_ADMINISTRATOR,  true,  nullptr,                                        "", serverShutdownCommandTable },
         { "set",            SEC_ADMINISTRATOR,  true,  nullptr,                                        "", serverSetCommandTable },
+        {"progression",     SEC_GAMEMASTER,     true,  &ChatHandler::HandleProgressionPhaseCommand,    "", nullptr },
         { nullptr,          0,                  false, nullptr,                                        "", nullptr }
     };
 
