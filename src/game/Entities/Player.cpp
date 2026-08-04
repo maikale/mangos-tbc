@@ -64,6 +64,7 @@
 #include "World/WorldStateDefines.h"
 #include "World/WorldState.h"
 #include "Anticheat/Anticheat.hpp"
+#include "Progression/ProgressionMgr.h"
 
 #ifdef BUILD_DEPRECATED_PLAYERBOT
 #include "PlayerBot/Base/PlayerbotAI.h"
@@ -12820,6 +12821,11 @@ void Player::PrepareQuestMenu(ObjectGuid guid) const
         if (!pQuest || !pQuest->IsActive())
             continue;
 
+        // Progression System
+        if (!sProgressionMgr->IsQuestUnlocked(quest_id))
+            continue;
+
+
         QuestStatus status = GetQuestStatus(quest_id);
 
         if (status == QUEST_STATUS_COMPLETE && !GetQuestRewardStatus(quest_id))
@@ -13029,14 +13035,19 @@ bool Player::CanSeeStartQuest(Quest const* pQuest) const
 
 bool Player::CanTakeQuest(Quest const* pQuest, bool msg) const
 {
+    if (!sProgressionMgr->IsQuestUnlocked(pQuest->GetQuestId()))
+    {
+        return false;
+    }
+
     return SatisfyQuestStatus(pQuest, msg) && SatisfyQuestExclusiveGroup(pQuest, msg) &&
-           SatisfyQuestClass(pQuest, msg) && SatisfyQuestRace(pQuest, msg) && SatisfyQuestLevel(pQuest, msg) &&
-           SatisfyQuestSkill(pQuest, msg) && SatisfyQuestCondition(pQuest, msg) && SatisfyQuestReputation(pQuest, msg) &&
-           SatisfyQuestPreviousQuest(pQuest, msg) && SatisfyQuestTimed(pQuest, msg) &&
-           SatisfyQuestNextChain(pQuest, msg) && SatisfyQuestPrevChain(pQuest, msg) &&
-           SatisfyQuestBreadcrumbQuest(pQuest, msg) && SatisfyQuestDependentBreadcrumbQuests(pQuest, msg) &&
-           SatisfyQuestDay(pQuest, msg) && SatisfyQuestWeek(pQuest) && SatisfyQuestMonth(pQuest) &&
-           pQuest->IsActive();
+        SatisfyQuestClass(pQuest, msg) && SatisfyQuestRace(pQuest, msg) && SatisfyQuestLevel(pQuest, msg) &&
+        SatisfyQuestSkill(pQuest, msg) && SatisfyQuestCondition(pQuest, msg) && SatisfyQuestReputation(pQuest, msg) &&
+        SatisfyQuestPreviousQuest(pQuest, msg) && SatisfyQuestTimed(pQuest, msg) &&
+        SatisfyQuestNextChain(pQuest, msg) && SatisfyQuestPrevChain(pQuest, msg) &&
+        SatisfyQuestBreadcrumbQuest(pQuest, msg) && SatisfyQuestDependentBreadcrumbQuests(pQuest, msg) &&
+        SatisfyQuestDay(pQuest, msg) && SatisfyQuestWeek(pQuest) && SatisfyQuestMonth(pQuest) &&
+        pQuest->IsActive();
 }
 
 bool Player::CanAddQuest(Quest const* pQuest, bool msg) const
@@ -14872,6 +14883,16 @@ void Player::SendQuestGiverStatusMultiple() const
 
             if (!questgiver->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER))
                 continue;
+
+            // Progression System
+            if (!sProgressionMgr->HasUnlockedQuestGiver(questgiver))
+            {
+                sLog.outString(
+                    "[Progression] Hidden NPC from minimap Entry: %u",
+                    questgiver->GetEntry());
+
+                continue;
+            }
 
             uint8 dialogStatus = sScriptDevAIMgr.GetDialogStatus(this, questgiver);
 

@@ -1692,6 +1692,11 @@ bool Creature::LoadFromDB(uint32 dbGuid, Map* map, uint32 newGuid, uint32 forced
         return false;
     }
 
+    if (!sProgressionMgr->IsCreatureUnlocked(data->id))
+    {
+        return false;
+    }
+
     // Creature can be loaded already in map if grid has been unloaded while creature walk to another grid
     {
         Creature* existing = map->GetCreature(dbGuid);

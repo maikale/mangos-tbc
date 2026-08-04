@@ -1,10 +1,13 @@
 #include "ProgressionMgr.h"
 
 #include "Config/Config.h"
+#include "Database/DatabaseEnv.h"
 #include "Entities/Player.h"
 #include "Log/Log.h"
 #include "Server/WorldSession.h"
 #include "World/World.h"
+#include "Entities/Creature.h"
+#include "Globals/ObjectMgr.h"
 
 ProgressionMgr* sProgressionMgr = new ProgressionMgr();
 
@@ -16,7 +19,6 @@ ProgressionMgr::ProgressionMgr()
 
 void ProgressionMgr::Load()
 {
-
     m_enabled = sConfig.GetBoolDefault(
         "Progression.Enabled",
         true);
@@ -25,9 +27,10 @@ void ProgressionMgr::Load()
         "Progression.Phase",
         1);
 
+    LoadUnlocks();
+
     if (m_enabled)
     {
-
         sLog.outString("---------------------------------");
         sLog.outString(" Progression System Enabled");
         sLog.outString(" Phase %u : %s",
@@ -38,12 +41,59 @@ void ProgressionMgr::Load()
     }
 }
 
+void ProgressionMgr::LoadUnlocks()
+{
+    m_unlocks.clear();
+
+    auto queryResult = WorldDatabase.PQuery(
+        "SELECT type, entry, phase FROM progression_unlocks");
+
+    if (!queryResult)
+    {
+        sLog.outString("Progression: no unlock data found");
+        return;
+    }
+
+    do
+    {
+        Field* fields = queryResult->Fetch();
+
+        std::string type = fields[0].GetString();
+
+        uint32 entry = fields[1].GetUInt32();
+
+        uint32 phase = fields[2].GetUInt32();
+
+        m_unlocks[type][entry] = phase;
+
+        sLog.outString(
+            "Progression loaded: %s Entry %u Phase %u",
+            type.c_str(),
+            entry,
+            phase);
+
+    } while (queryResult->NextRow());
+}
+
+bool ProgressionMgr::IsUnlocked(std::string type, uint32 entry) const
+{
+    auto typeItr = m_unlocks.find(type);
+
+    if (typeItr == m_unlocks.end())
+        return true;
+
+    auto entryItr = typeItr->second.find(entry);
+
+    if (entryItr == typeItr->second.end())
+        return true;
+
+    return m_phase >= entryItr->second;
+}
+
 const char* ProgressionMgr::GetPhaseName() const
 {
-
     switch (m_phase)
     {
-
         case 1:
             return "Karazhan Era";
 
@@ -72,28 +122,23 @@ uint32 ProgressionMgr::GetRequiredPhase(uint32 mapId) const
 {
     switch (mapId)
     {
-        // Phase 1
-        case 532: // Karazhan
-        case 565: // Gruul's Lair
-        case 544: // Magtheridon's Lair
+        case 532:
+        case 565:
+        case 544:
             return 1;
 
-        // Phase 2
-        case 548: // Serpentshrine Cavern
-        case 550: // Tempest Keep
+        case 548:
+        case 550:
             return 2;
 
-        // Phase 3
-        case 534: // Mount Hyjal
-        case 564: // Black Temple
+        case 534:
+        case 564:
             return 3;
 
-        // Phase 4
-        case 568: // Zul'Aman
+        case 568:
             return 4;
 
-        // Phase 5
-        case 580: // Sunwell Plateau
+        case 580:
             return 5;
     }
 
@@ -188,68 +233,44 @@ void ProgressionMgr::AnnouncePhase()
 
 bool ProgressionMgr::IsVendorItemUnlocked(uint32 vendorEntry, uint32 itemEntry) const
 {
-    /*
-    =====================================================
-        PHASE 1 - Karazhan Era
-        T4 Content
-    =====================================================
-    */
-
-    /*
-    =====================================================
-        PHASE 2 - Tier 5 Era
-        SSC / TK Content
-    =====================================================
-    */
-
-    /*
-    =====================================================
-        PHASE 3 - Tier 6 Era
-        Hyjal / Black Temple Content
-    =====================================================
-    */
-
-    // Example:
-    // Ankh (17030)
-    // Available only after Phase 3
-    if (itemEntry == 17030)
-    {
-        return m_phase >= 3;
-    }
-
-    /*
-    =====================================================
-        PHASE 4 - Zul'Aman Era
-    =====================================================
-    */
-
-    /*
-    =====================================================
-        PHASE 5 - Sunwell Era
-    =====================================================
-    */
-
-    // Unknown items stay available
-    return true;
+    return IsUnlocked("ITEM", itemEntry);
 }
 
 bool ProgressionMgr::IsVendorUnlocked(uint32 vendorEntry) const
 {
-    /*
-    =====================================
-        TEST VENDOR UNLOCK
-    =====================================
-    */
+    return IsUnlocked("VENDOR", vendorEntry);
+}
 
-    // Example vendor
-    // Entry: 20001
+bool ProgressionMgr::IsGameObjectUnlocked(uint32 entry) const
+{
+    return IsUnlocked("GAMEOBJECT", entry);
+}
 
-    if (vendorEntry == 1275)
+bool ProgressionMgr::IsQuestUnlocked(uint32 questId) const
+{
+    return IsUnlocked("QUEST", questId);
+}
+
+bool ProgressionMgr::IsCreatureUnlocked(uint32 creatureEntry) const
+{
+    return IsUnlocked("CREATURE", creatureEntry);
+}
+
+bool ProgressionMgr::HasUnlockedQuestGiver(Creature* creature) const
+{
+    if (!creature)
+        return false;
+
+    QuestRelationsMapBounds bounds =
+        sObjectMgr.GetCreatureQuestRelationsMapBounds(creature->GetEntry());
+
+    for (QuestRelationsMap::const_iterator itr = bounds.first;
+        itr != bounds.second;
+        ++itr)
     {
-        // Unlock on Phase 3
-        return m_phase >= 1;
+        if (IsQuestUnlocked(itr->second))
+            return true;
     }
 
-    // All other vendors stay enabled
-    return true;
+    return false;
 }

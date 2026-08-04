@@ -44,6 +44,7 @@
 #include <G3D/CoordinateFrame.h>
 #include <G3D/Quat.h>
 #include "Entities/Transports.h"
+#include "Progression/ProgressionMgr.h"
 
 bool QuaternionData::isUnit() const
 {
@@ -193,9 +194,18 @@ bool GameObject::Create(uint32 dbGuid, uint32 guidlow, uint32 name_id, Map* map,
     }
 
     GameObjectInfo const* goinfo = ObjectMgr::GetGameObjectInfo(name_id);
+
     if (!goinfo)
     {
-        sLog.outErrorDb("Gameobject (GUID: %u) not created: Entry %u does not exist in `gameobject_template`. Map: %u  (X: %f Y: %f Z: %f) ang: %f rotation0: %f rotation1: %f rotation2: %f rotation3: %f", guidlow, name_id, map->GetId(), x, y, z, ang, rotation0, rotation1, rotation2, rotation3);
+        sLog.outErrorDb("Gameobject (GUID: %u) not created: Entry %u does not exist in `gameobject_template`",
+            guidlow,
+            name_id);
+
+        return false;
+    }
+
+    if (!sProgressionMgr->IsGameObjectUnlocked(name_id))
+    {
         return false;
     }
 

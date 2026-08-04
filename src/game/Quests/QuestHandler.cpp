@@ -30,6 +30,7 @@
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
 #include "Groups/Group.h"
 #include "Tools/Formulas.h"
+#include "Progression/ProgressionMgr.h"
 
 #ifdef BUILD_DEPRECATED_PLAYERBOT
 #include "PlayerBot/Base/PlayerbotAI.h"
@@ -52,21 +53,30 @@ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket& recv_data)
 
     switch (questgiver->GetTypeId())
     {
-        case TYPEID_UNIT:
-        {
+        case TYPEID_UNIT: {
             Creature* cr_questgiver = (Creature*)questgiver;
 
-            if (_player->CanInteract(static_cast<Unit*>(questgiver)))       // not show quest status to enemies
+            if (_player->CanInteract(static_cast<Unit*>(questgiver))) // not show quest status to enemies
             {
+                if (!sProgressionMgr->HasUnlockedQuestGiver(cr_questgiver))
+                {
+                    _player->GetPlayerMenu()->SendQuestGiverStatus(
+                        DIALOG_STATUS_NONE,
+                        guid);
+
+                    return;
+                }
+
                 dialogStatus = sScriptDevAIMgr.GetDialogStatus(_player, cr_questgiver);
 
                 if (dialogStatus == DIALOG_STATUS_UNDEFINED)
                     dialogStatus = getDialogStatus(_player, cr_questgiver, DIALOG_STATUS_NONE);
             }
+
             break;
         }
-        case TYPEID_GAMEOBJECT:
-        {
+
+        case TYPEID_GAMEOBJECT: {
             GameObject* go_questgiver = (GameObject*)questgiver;
 
             if (_player->CanInteract(go_questgiver))
@@ -76,8 +86,10 @@ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket& recv_data)
                 if (dialogStatus == DIALOG_STATUS_UNDEFINED)
                     dialogStatus = getDialogStatus(_player, go_questgiver, DIALOG_STATUS_NONE);
             }
+
             break;
         }
+
         default:
             sLog.outError("QuestGiver called for unexpected type %u", questgiver->GetTypeId());
             break;
@@ -677,6 +689,9 @@ uint32 WorldSession::getDialogStatus(const Player* pPlayer, const Object* questg
         if (!pQuest || !pQuest->IsActive())
             continue;
 
+        if (!sProgressionMgr->IsQuestUnlocked(quest_id))
+            continue;
+
         QuestStatus status = pPlayer->GetQuestStatus(quest_id);
 
         if (status == QUEST_STATUS_COMPLETE && !pPlayer->GetQuestRewardStatus(quest_id))
@@ -698,6 +713,10 @@ uint32 WorldSession::getDialogStatus(const Player* pPlayer, const Object* questg
         Quest const* pQuest = sObjectMgr.GetQuestTemplate(quest_id);
 
         if (!pQuest || !pQuest->IsActive())
+            continue;
+
+        // Progression System
+        if (!sProgressionMgr->IsQuestUnlocked(quest_id))
             continue;
 
         QuestStatus status = pPlayer->GetQuestStatus(quest_id);
