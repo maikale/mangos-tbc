@@ -399,7 +399,7 @@ class Loot
         bool IsLootedFor(Player const* player) const;
 
     private:
-        Loot(): m_lootTarget(nullptr), m_itemTarget(nullptr), m_gold(0), m_maxSlot(0), m_lootType(),
+        Loot() : m_sourceCreatureEntry(0), m_lootTarget(nullptr), m_itemTarget(nullptr), m_gold(0), m_maxSlot(0), m_lootType(),
             m_clientLootType(), m_lootMethod(), m_threshold(), m_maxEnchantSkill(0), m_haveItemOverThreshold(false),
             m_isChecked(false), m_isChest(false), m_isChanged(false), m_isFakeLoot(false)
         {}
@@ -423,6 +423,7 @@ class Loot
         bool IsLootOpenedBy(ObjectGuid const& playerGuid) const { return m_playersOpened.find(playerGuid) != m_playersOpened.end(); }
 
         // What is looted
+        uint32 m_sourceCreatureEntry;
         WorldObject*     m_lootTarget;
         Item*            m_itemTarget;
         ObjectGuid       m_guidTarget;

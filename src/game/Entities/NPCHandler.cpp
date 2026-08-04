@@ -185,6 +185,11 @@ void WorldSession::SendTrainerList(ObjectGuid guid) const
         {
             TrainerSpell const* tSpell = &itr.second;
 
+            
+        // Progression System
+            if (!sProgressionMgr->IsSpellUnlocked(tSpell->spell))
+                continue;
+
             uint32 reqLevel = 0;
             if (!_player->IsSpellFitByClassAndRace(tSpell->spell, &reqLevel))
                 continue;
@@ -207,6 +212,10 @@ void WorldSession::SendTrainerList(ObjectGuid guid) const
         for (const auto& itr : tSpells->spellList)
         {
             TrainerSpell const* tSpell = &itr.second;
+
+            // Progression System
+            if (!sProgressionMgr->IsSpellUnlocked(tSpell->spell))
+                continue;
 
             uint32 reqLevel = 0;
             if (!_player->IsSpellFitByClassAndRace(tSpell->spell, &reqLevel))

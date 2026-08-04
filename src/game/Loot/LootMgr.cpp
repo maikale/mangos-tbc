@@ -28,6 +28,7 @@
 #include "Entities/ItemEnchantmentMgr.h"
 #include "Tools/Language.h"
 #include "BattleGround/BattleGroundMgr.h"
+#include "Progression/ProgressionMgr.h"
 #include <sstream>
 #include <iomanip>
 
@@ -921,11 +922,15 @@ GroupLootRoll* Loot::GetRollForSlot(uint32 itemSlot)
 // Inserts the item into the loot (called by LootTemplate processors)
 void Loot::AddItem(LootStoreItem const& item)
 {
-    if (m_lootItems.size() < MAX_NR_LOOT_ITEMS)                              // Normal drop
+    // Progression System
+    if (!sProgressionMgr->IsLootItemUnlocked(m_sourceCreatureEntry, item.itemid))
+        return;
+
+    if (m_lootItems.size() < MAX_NR_LOOT_ITEMS) // Normal drop
     {
         LootItem* lootItem = new LootItem(item, m_maxSlot++, uint32(m_threshold));
 
-        if (!lootItem->isUnderThreshold)                                    // set flag for later to know that we have an over threshold item
+        if (!lootItem->isUnderThreshold) // set flag for later to know that we have an over threshold item
             m_haveItemOverThreshold = true;
 
         m_lootItems.push_back(lootItem);
@@ -935,7 +940,11 @@ void Loot::AddItem(LootStoreItem const& item)
 // Insert item into the loot explicit way. (used for container item and Item::LoadFromDB)
 void Loot::AddItem(uint32 itemid, uint32 count, uint32 randomSuffix, int32 randomPropertyId)
 {
-    if (m_lootItems.size() < MAX_NR_LOOT_ITEMS)                              // Normal drop
+    // Progression System
+    if (!sProgressionMgr->IsLootItemUnlocked(m_sourceCreatureEntry, itemid))
+        return;
+
+    if (m_lootItems.size() < MAX_NR_LOOT_ITEMS) // Normal drop
     {
         LootItem* lootItem = new LootItem(itemid, count, randomSuffix, randomPropertyId, m_maxSlot++);
 
@@ -1662,6 +1671,7 @@ void Loot::SetGroupLootRight(Player* player)
 }
 
 Loot::Loot(Player* player, Creature* creature, LootType type) :
+    m_sourceCreatureEntry(0),
     m_lootTarget(nullptr), m_itemTarget(nullptr), m_gold(0), m_maxSlot(0), m_lootType(type),
     m_clientLootType(CLIENT_LOOT_CORPSE), m_lootMethod(NOT_GROUP_TYPE_LOOT), m_threshold(ITEM_QUALITY_UNCOMMON), m_maxEnchantSkill(0), m_haveItemOverThreshold(false),
     m_isChecked(false), m_isChest(false), m_isChanged(false), m_isFakeLoot(false), m_createTime(World::GetCurrentClockTime())
@@ -1681,6 +1691,7 @@ Loot::Loot(Player* player, Creature* creature, LootType type) :
 
     m_lootTarget = creature;
     m_guidTarget = creature->GetObjectGuid();
+    m_sourceCreatureEntry = creature->GetEntry();
     CreatureInfo const* creatureInfo = creature->GetCreatureInfo();
 
     switch (type)
@@ -1768,6 +1779,7 @@ Loot::Loot(Player* player, Creature* creature, LootType type) :
 }
 
 Loot::Loot(Player* player, GameObject* gameObject, LootType type, bool lootSnapshot) :
+    m_sourceCreatureEntry(0),
     m_lootTarget(nullptr), m_itemTarget(nullptr), m_gold(0), m_maxSlot(0), m_lootType(type),
     m_clientLootType(CLIENT_LOOT_CORPSE), m_lootMethod(NOT_GROUP_TYPE_LOOT), m_threshold(ITEM_QUALITY_UNCOMMON), m_maxEnchantSkill(0), m_haveItemOverThreshold(false),
     m_isChecked(false), m_isChest(false), m_isChanged(false), m_isFakeLoot(false), m_createTime(World::GetCurrentClockTime())
@@ -1859,6 +1871,7 @@ Loot::Loot(Player* player, GameObject* gameObject, LootType type, bool lootSnaps
 }
 
 Loot::Loot(Player* player, Corpse* corpse, LootType type) :
+    m_sourceCreatureEntry(0),
     m_lootTarget(nullptr), m_itemTarget(nullptr), m_gold(0), m_maxSlot(0), m_lootType(type),
     m_clientLootType(CLIENT_LOOT_CORPSE), m_lootMethod(NOT_GROUP_TYPE_LOOT), m_threshold(ITEM_QUALITY_UNCOMMON), m_maxEnchantSkill(0), m_haveItemOverThreshold(false),
     m_isChecked(false), m_isChest(false), m_isChanged(false), m_isFakeLoot(false), m_createTime(World::GetCurrentClockTime())
@@ -1907,7 +1920,8 @@ Loot::Loot(Player* player, Corpse* corpse, LootType type) :
     return;
 }
 
-Loot::Loot(Player* player, Item* item, LootType type) :
+Loot::Loot(Player* player, Item* item, LootType type) : 
+    m_sourceCreatureEntry(0),
     m_lootTarget(nullptr), m_itemTarget(nullptr), m_gold(0), m_maxSlot(0), m_lootType(type),
     m_clientLootType(CLIENT_LOOT_CORPSE), m_lootMethod(NOT_GROUP_TYPE_LOOT), m_threshold(ITEM_QUALITY_UNCOMMON), m_maxEnchantSkill(0), m_haveItemOverThreshold(false),
     m_isChecked(false), m_isChest(false), m_isChanged(false), m_isFakeLoot(false), m_createTime(World::GetCurrentClockTime())
@@ -1950,7 +1964,8 @@ Loot::Loot(Player* player, Item* item, LootType type) :
     return;
 }
 
-Loot::Loot(Unit* unit, Item* item) :
+Loot::Loot(Unit* unit, Item* item) : 
+    m_sourceCreatureEntry(0),
     m_lootTarget(nullptr), m_itemTarget(item), m_gold(0), m_maxSlot(0),
     m_lootType(LOOT_SKINNING), m_clientLootType(CLIENT_LOOT_PICKPOCKETING), m_lootMethod(NOT_GROUP_TYPE_LOOT), m_threshold(ITEM_QUALITY_UNCOMMON), m_maxEnchantSkill(0),
     m_haveItemOverThreshold(false), m_isChecked(false), m_isChest(false), m_isChanged(false), m_isFakeLoot(false), m_createTime(World::GetCurrentClockTime())
@@ -1959,7 +1974,8 @@ Loot::Loot(Unit* unit, Item* item) :
     m_guidTarget = item->GetObjectGuid();
 }
 
-Loot::Loot(Player* player, uint32 id, LootType type) :
+Loot::Loot(Player* player, uint32 id, LootType type) : 
+    m_sourceCreatureEntry(0),
     m_lootTarget(nullptr), m_itemTarget(nullptr), m_gold(0), m_maxSlot(0), m_lootType(type),
     m_clientLootType(CLIENT_LOOT_CORPSE), m_lootMethod(NOT_GROUP_TYPE_LOOT), m_threshold(ITEM_QUALITY_UNCOMMON), m_maxEnchantSkill(0), m_haveItemOverThreshold(false),
     m_isChecked(false), m_isChest(false), m_isChanged(false), m_isFakeLoot(false), m_createTime(World::GetCurrentClockTime())
@@ -1981,7 +1997,8 @@ Loot::Loot(Player* player, uint32 id, LootType type) :
     }
 }
 
-Loot::Loot(LootType type) :
+Loot::Loot(LootType type) : 
+    m_sourceCreatureEntry(0),
     m_lootTarget(nullptr), m_itemTarget(nullptr), m_gold(0), m_maxSlot(0), m_lootType(type),
     m_clientLootType(CLIENT_LOOT_CORPSE), m_lootMethod(NOT_GROUP_TYPE_LOOT), m_threshold(ITEM_QUALITY_UNCOMMON), m_maxEnchantSkill(0), m_haveItemOverThreshold(false),
     m_isChecked(false), m_isChest(false), m_isChanged(false), m_isFakeLoot(false), m_createTime(World::GetCurrentClockTime())

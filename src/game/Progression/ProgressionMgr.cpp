@@ -44,6 +44,7 @@ void ProgressionMgr::Load()
 void ProgressionMgr::LoadUnlocks()
 {
     m_unlocks.clear();
+    m_lootUnlocks.clear();
 
     auto queryResult = WorldDatabase.PQuery(
         "SELECT type, entry, phase FROM progression_unlocks");
@@ -73,6 +74,33 @@ void ProgressionMgr::LoadUnlocks()
             phase);
 
     } while (queryResult->NextRow());
+
+    // Load creature specific loot unlocks
+    auto lootQuery = WorldDatabase.PQuery(
+        "SELECT creature_entry, item_entry, phase FROM progression_loot_unlocks");
+
+    if (lootQuery)
+    {
+        do
+        {
+            Field* fields = lootQuery->Fetch();
+
+            LootUnlock unlock;
+
+            unlock.creatureEntry = fields[0].GetUInt32();
+            unlock.itemEntry = fields[1].GetUInt32();
+            unlock.phase = fields[2].GetUInt32();
+
+            m_lootUnlocks.push_back(unlock);
+
+            sLog.outString(
+                "Progression loot loaded: Creature %u Item %u Phase %u",
+                unlock.creatureEntry,
+                unlock.itemEntry,
+                unlock.phase);
+
+        } while (lootQuery->NextRow());
+    }
 }
 
 bool ProgressionMgr::IsUnlocked(std::string type, uint32 entry) const
@@ -254,6 +282,32 @@ bool ProgressionMgr::IsQuestUnlocked(uint32 questId) const
 bool ProgressionMgr::IsCreatureUnlocked(uint32 creatureEntry) const
 {
     return IsUnlocked("CREATURE", creatureEntry);
+}
+
+bool ProgressionMgr::IsSpellUnlocked(uint32 spellId) const
+{
+    return IsUnlocked("SPELL", spellId);
+}
+
+bool ProgressionMgr::IsItemUnlocked(uint32 itemEntry) const
+{
+    return IsUnlocked("ITEM", itemEntry);
+}
+
+bool ProgressionMgr::IsLootItemUnlocked(uint32 creatureEntry, uint32 itemEntry) const
+{
+    // First check boss/NPC specific loot
+    for (auto const& unlock : m_lootUnlocks)
+    {
+        if (unlock.creatureEntry == creatureEntry &&
+            unlock.itemEntry == itemEntry)
+        {
+            return m_phase >= unlock.phase;
+        }
+    }
+
+    // Fallback to global item unlock
+    return IsUnlocked("ITEM", itemEntry);
 }
 
 bool ProgressionMgr::HasUnlockedQuestGiver(Creature* creature) const

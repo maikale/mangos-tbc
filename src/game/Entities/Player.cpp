@@ -3298,6 +3298,10 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool dependen
             sLog.outError("Player::addSpell: Broken spell #%u learning not allowed.", spell_id);
 
         return false;
+
+         // Progression System
+        if (!sProgressionMgr->IsSpellUnlocked(spell_id))
+            return false;
     }
 
     PlayerSpellState state = learning ? PLAYERSPELL_NEW : PLAYERSPELL_UNCHANGED;
