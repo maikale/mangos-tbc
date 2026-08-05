@@ -29,22 +29,74 @@ void ProgressionMgr::Load()
 
     LoadUnlocks();
 
+    LoadAttunements();
+
+    LoadArenaSeasons();
+
+    LoadArenaItems();
+
     if (m_enabled)
     {
         sLog.outString("---------------------------------");
         sLog.outString(" Progression System Enabled");
+
         sLog.outString(" Phase %u : %s",
             m_phase,
             GetPhaseName());
 
+        sLog.outString(
+            " Arena Season: %u",
+            GetCurrentArenaSeason());
+
         sLog.outString("---------------------------------");
     }
+}
+
+void ProgressionMgr::LoadAttunements()
+{
+    m_attunements.clear();
+
+    auto query = WorldDatabase.PQuery(
+        "SELECT map_id, type, entry, name FROM progression_attunements");
+
+    if (!query)
+    {
+        sLog.outString("Progression: no attunement data found");
+        return;
+    }
+
+    do
+    {
+        Field* fields = query->Fetch();
+
+        AttunementInfo info;
+
+        info.mapId = fields[0].GetUInt32();
+        info.type = fields[1].GetString();
+        info.entry = fields[2].GetUInt32();
+        info.name = fields[3].GetString();
+
+        m_attunements.push_back(info);
+
+        sLog.outString(
+            "Progression attunement loaded: Map %u Type %s Entry %u %s",
+            info.mapId,
+            info.type.c_str(),
+            info.entry,
+            info.name.c_str());
+
+    } while (query->NextRow());
 }
 
 void ProgressionMgr::LoadUnlocks()
 {
     m_unlocks.clear();
     m_lootUnlocks.clear();
+    m_raids.clear();
+    m_dungeons.clear();
+    m_phases.clear();
+    m_arenaSeasons.clear();
+    m_arenaItems.clear();
 
     auto queryResult = WorldDatabase.PQuery(
         "SELECT type, entry, phase FROM progression_unlocks");
@@ -101,7 +153,97 @@ void ProgressionMgr::LoadUnlocks()
 
         } while (lootQuery->NextRow());
     }
+
+    //
+    // Load raid progression
+    //
+    auto raidQuery = WorldDatabase.PQuery(
+        "SELECT map_id, phase, name FROM progression_raids");
+
+    if (raidQuery)
+    {
+        do
+        {
+            Field* fields = raidQuery->Fetch();
+
+            RaidInfo raid;
+
+            raid.mapId = fields[0].GetUInt32();
+            raid.phase = fields[1].GetUInt32();
+            raid.name = fields[2].GetString();
+
+            m_raids[raid.mapId] = raid;
+
+            sLog.outString(
+                "Progression raid loaded: Map %u %s Phase %u",
+                raid.mapId,
+                raid.name.c_str(),
+                raid.phase);
+
+        } while (raidQuery->NextRow());
+    }
+
+    //
+    // Load dungeon progression
+    //
+    auto dungeonQuery = WorldDatabase.PQuery(
+        "SELECT map_id, phase, name, heroic FROM progression_dungeons");
+
+    if (dungeonQuery)
+    {
+        do
+        {
+            Field* fields = dungeonQuery->Fetch();
+
+            DungeonInfo dungeon;
+
+            dungeon.mapId = fields[0].GetUInt32();
+            dungeon.phase = fields[1].GetUInt32();
+            dungeon.name = fields[2].GetString();
+            dungeon.heroic = fields[3].GetUInt32();
+
+            m_dungeons[std::make_pair(dungeon.mapId, dungeon.heroic)] = dungeon;
+
+            sLog.outString(
+                "Progression dungeon loaded: Map %u %s Phase %u Heroic %u",
+                dungeon.mapId,
+                dungeon.name.c_str(),
+                dungeon.phase,
+                dungeon.heroic);
+
+        } while (dungeonQuery->NextRow());
+    }
+
+    auto phaseQuery = WorldDatabase.PQuery(
+        "SELECT phase, name, expansion, patch, start_level, max_level FROM progression_phases");
+
+    if (phaseQuery)
+    {
+        do
+        {
+            Field* fields = phaseQuery->Fetch();
+
+            PhaseInfo info;
+
+            info.phase = fields[0].GetUInt32();
+            info.name = fields[1].GetString();
+            info.expansion = fields[2].GetString();
+            info.patch = fields[3].GetString();
+            info.startLevel = fields[4].GetUInt32();
+            info.maxLevel = fields[5].GetUInt32();
+
+            m_phases[info.phase] = info;
+
+            sLog.outString(
+                "Progression phase loaded: %u %s",
+                info.phase,
+                info.name.c_str());
+
+        } while (phaseQuery->NextRow());
+    }
 }
+
+
 
 bool ProgressionMgr::IsUnlocked(std::string type, uint32 entry) const
 {
@@ -120,25 +262,12 @@ bool ProgressionMgr::IsUnlocked(std::string type, uint32 entry) const
 
 const char* ProgressionMgr::GetPhaseName() const
 {
-    switch (m_phase)
-    {
-        case 1:
-            return "Karazhan Era";
+    auto itr = m_phases.find(m_phase);
 
-        case 2:
-            return "Tier 5 Era";
+    if (itr == m_phases.end())
+        return "Unknown";
 
-        case 3:
-            return "Tier 6 Era";
-
-        case 4:
-            return "Zul'Aman Era";
-
-        case 5:
-            return "Sunwell Era";
-    }
-
-    return "Unknown";
+    return itr->second.name.c_str();
 }
 
 bool ProgressionMgr::IsRaidUnlocked(uint32 mapId) const
@@ -148,64 +277,110 @@ bool ProgressionMgr::IsRaidUnlocked(uint32 mapId) const
 
 uint32 ProgressionMgr::GetRequiredPhase(uint32 mapId) const
 {
-    switch (mapId)
+    auto itr = m_raids.find(mapId);
+
+    if (itr == m_raids.end())
+        return 1;
+
+    return itr->second.phase;
+}
+
+uint32 ProgressionMgr::GetRequiredDungeonPhase(uint32 mapId, uint32 heroic) const
+{
+    auto itr = m_dungeons.find(
+        std::make_pair(mapId, heroic));
+
+    if (itr == m_dungeons.end())
+        return 1;
+
+    return itr->second.phase;
+}
+
+bool ProgressionMgr::IsDungeonUnlocked(uint32 mapId, uint32 heroic) const
+{
+    auto itr = m_dungeons.find(
+        std::make_pair(mapId, heroic));
+
+    if (itr == m_dungeons.end())
+        return true;
+
+    return m_phase >= itr->second.phase;
+}
+
+bool ProgressionMgr::IsArenaItemUnlocked(uint32 itemEntry) const
+{
+    auto itr = m_arenaItems.find(itemEntry);
+
+    // item няма запис -> нормален item
+    if (itr == m_arenaItems.end())
+        return true;
+
+    uint32 currentSeason = GetCurrentArenaSeason();
+
+    return currentSeason >= itr->second.seasonId;
+}
+
+bool ProgressionMgr::HasAttunement(Player* player, uint32 mapId) const
+{
+    if (!player)
+        return false;
+
+    for (auto const& attune : m_attunements)
     {
-        case 532:
-        case 565:
-        case 544:
-            return 1;
+        // Това attunement изискване не е за тази инстанция
+        if (attune.mapId != mapId)
+            continue;
 
-        case 548:
-        case 550:
-            return 2;
+        // ITEM requirement
+        if (attune.type == "ITEM")
+        {
+            if (!player->HasItemCount(attune.entry, 1))
+            {
+                player->GetSession()->SendNotification(
+                    "You need: %s",
+                    attune.name.c_str());
 
-        case 534:
-        case 564:
-            return 3;
+                return false;
+            }
+        }
 
-        case 568:
-            return 4;
+        // QUEST requirement
+        else if (attune.type == "QUEST")
+        {
+            if (player->GetQuestStatus(attune.entry) != QUEST_STATUS_COMPLETE)
+            {
+                player->GetSession()->SendNotification(
+                    "You have not completed: %s",
+                    attune.name.c_str());
 
-        case 580:
-            return 5;
+                return false;
+            }
+        }
     }
 
-    return 1;
+    return true;
+}
+
+const char* ProgressionMgr::GetDungeonName(uint32 mapId, uint32 heroic) const
+{
+    auto itr = m_dungeons.find(
+        std::make_pair(mapId, heroic)
+    );
+
+    if (itr == m_dungeons.end())
+        return "Unknown Dungeon";
+
+    return itr->second.name.c_str();
 }
 
 const char* ProgressionMgr::GetRaidName(uint32 mapId) const
 {
-    switch (mapId)
-    {
-        case 532:
-            return "Karazhan";
+    auto itr = m_raids.find(mapId);
 
-        case 565:
-            return "Gruul's Lair";
+    if (itr == m_raids.end())
+        return "Unknown Raid";
 
-        case 544:
-            return "Magtheridon's Lair";
-
-        case 548:
-            return "Serpentshrine Cavern";
-
-        case 550:
-            return "Tempest Keep";
-
-        case 534:
-            return "Mount Hyjal";
-
-        case 564:
-            return "Black Temple";
-
-        case 568:
-            return "Zul'Aman";
-
-        case 580:
-            return "Sunwell Plateau";
-    }
-
-    return "Unknown Raid";
+    return itr->second.name.c_str();
 }
 
 void ProgressionMgr::SendWelcomeMessage(Player* player)
@@ -227,8 +402,8 @@ void ProgressionMgr::SetPhase(uint32 phase)
     if (phase < 1)
         phase = 1;
 
-    if (phase > 5)
-        phase = 5;
+    if (phase > 6)
+        phase = 6;
 
     m_phase = phase;
 
@@ -261,7 +436,17 @@ void ProgressionMgr::AnnouncePhase()
 
 bool ProgressionMgr::IsVendorItemUnlocked(uint32 vendorEntry, uint32 itemEntry) const
 {
+    if (IsArenaItem(itemEntry))
+        return IsArenaItemUnlocked(itemEntry);
+
     return IsUnlocked("ITEM", itemEntry);
+}
+
+bool ProgressionMgr::IsArenaItem(uint32 itemId) const
+{
+    auto itr = m_arenaItems.find(itemId);
+
+    return itr != m_arenaItems.end();
 }
 
 bool ProgressionMgr::IsVendorUnlocked(uint32 vendorEntry) const
@@ -327,4 +512,87 @@ bool ProgressionMgr::HasUnlockedQuestGiver(Creature* creature) const
     }
 
     return false;
+}
+
+void ProgressionMgr::LoadArenaSeasons()
+{
+    auto query = WorldDatabase.PQuery(
+        "SELECT season_id, phase, name, patch FROM progression_arena_seasons");
+
+    if (!query)
+    {
+        sLog.outString(
+            "Progression: no arena season data found");
+
+        return;
+    }
+
+    do
+    {
+        Field* fields = query->Fetch();
+
+        ArenaSeasonInfo info;
+
+        info.seasonId = fields[0].GetUInt32();
+        info.phase = fields[1].GetUInt32();
+        info.name = fields[2].GetString();
+        info.patch = fields[3].GetString();
+
+        m_arenaSeasons[info.seasonId] = info;
+
+        sLog.outString(
+            "Progression arena season loaded: Season %u %s Phase %u Patch %s",
+            info.seasonId,
+            info.name.c_str(),
+            info.phase,
+            info.patch.c_str());
+
+    } while (query->NextRow());
+}
+
+uint32 ProgressionMgr::GetCurrentArenaSeason() const
+{
+    uint32 season = 0;
+
+    for (auto const& itr : m_arenaSeasons)
+    {
+        if (m_phase >= itr.second.phase)
+            season = itr.second.seasonId;
+    }
+
+    return season;
+}
+
+void ProgressionMgr::LoadArenaItems()
+{
+    auto query = WorldDatabase.PQuery(
+        "SELECT item_entry, season_id, name FROM progression_arena_items");
+
+    if (!query)
+    {
+        sLog.outString(
+            "Progression: no arena item data found");
+
+        return;
+    }
+
+    do
+    {
+        Field* fields = query->Fetch();
+
+        ArenaItemInfo info;
+
+        info.itemEntry = fields[0].GetUInt32();
+        info.seasonId = fields[1].GetUInt32();
+        info.name = fields[2].GetString();
+
+        m_arenaItems[info.itemEntry] = info;
+
+        sLog.outString(
+            "Progression arena item loaded: Item %u Season %u %s",
+            info.itemEntry,
+            info.seasonId,
+            info.name.c_str());
+
+    } while (query->NextRow());
 }

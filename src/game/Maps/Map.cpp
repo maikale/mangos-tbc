@@ -1893,7 +1893,7 @@ bool DungeonMap::Add(Player* player)
     if (i_mapEntry && i_mapEntry->IsRaid())
     {
         sLog.outString(
-            "Progression Check MapID: %u",
+            "Progression Check Raid MapID: %u",
             GetId());
 
         if (!sProgressionMgr->IsRaidUnlocked(GetId()))
@@ -1906,6 +1906,32 @@ bool DungeonMap::Add(Player* player)
 
             return false;
         }
+    }
+
+    // Progression dungeon gating
+    if (i_mapEntry && !i_mapEntry->IsRaid())
+    {
+        uint32 heroic = 0;
+
+        if (GetDifficulty() == DUNGEON_DIFFICULTY_HEROIC)
+            heroic = 1;
+
+        if (!sProgressionMgr->IsDungeonUnlocked(GetId(), heroic))
+        {
+            player->GetSession()->SendNotification(
+                "%s is not available yet. Current phase: %u. Required phase: %u.",
+                sProgressionMgr->GetDungeonName(GetId(), heroic),
+                sProgressionMgr->GetCurrentPhase(),
+                sProgressionMgr->GetRequiredDungeonPhase(GetId(), heroic));
+
+            return false;
+        }
+    }
+
+    // Progression attunement gating
+    if (!sProgressionMgr->HasAttunement(player, GetId()))
+    {
+        return false;
     }
     // TODO: Not sure about checking player level: already done in HandleAreaTriggerOpcode
     // GMs still can teleport player in instance.

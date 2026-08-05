@@ -27,8 +27,20 @@ public:
     // Load unlock data from database
     void LoadUnlocks();
 
+    void LoadAttunements();
+
+    void LoadArenaSeasons();
+
+    void LoadArenaItems();
+
     // Load creature specific loot unlocks
     void LoadLootUnlocks();
+
+    // Load phases from database
+    void LoadPhases();
+
+    // Load raids from database
+    void LoadRaids();
 
     void AnnouncePhase();
 
@@ -46,22 +58,12 @@ public:
         return m_phase;
     }
 
-    /*
-        Generic progression check
-
-        TYPE examples:
-        ITEM
-        QUEST
-        GAMEOBJECT
-        CREATURE
-        VENDOR
-        RAID
-        SPELL
-    */
-
     bool IsUnlocked(std::string type, uint32 entry) const;
 
     bool IsRaidUnlocked(uint32 mapId) const;
+
+    // Dungeon progression
+    bool IsDungeonUnlocked(uint32 mapId, uint32 heroic) const;
 
     bool IsVendorItemUnlocked(uint32 vendorEntry, uint32 itemEntry) const;
 
@@ -82,12 +84,26 @@ public:
     // Creature specific loot check
     bool IsLootItemUnlocked(uint32 creatureEntry, uint32 itemEntry) const;
 
-
     uint32 GetRequiredPhase(uint32 mapId) const;
+
+    uint32 GetRequiredDungeonPhase(uint32 mapId, uint32 heroic) const;
 
     const char* GetRaidName(uint32 mapId) const;
 
+    // Dungeon name
+    const char* GetDungeonName(uint32 mapId, uint32 heroic) const;
+
+    bool HasAttunement(Player* player, uint32 mapId) const;
+
     const char* GetPhaseName() const;
+
+    uint32 GetCurrentArenaSeason() const;
+
+    // Arena progression
+    bool IsArenaItem(uint32 itemId) const;
+
+    bool IsArenaItemUnlocked(uint32 itemId) const;
+
 private:
     struct LootUnlock
     {
@@ -96,24 +112,82 @@ private:
         uint32 phase;
     };
 
+    // NEW Phase database cache
+    struct PhaseInfo
+    {
+        uint32 phase;
+
+        std::string name;
+
+        std::string expansion;
+
+        std::string patch;
+
+        uint32 startLevel;
+
+        uint32 maxLevel;
+    };
+
+    struct ArenaSeasonInfo
+    {
+        uint32 seasonId;
+
+        uint32 phase;
+
+        std::string name;
+
+        std::string patch;
+    };
+
+    struct ArenaItemInfo
+    {
+        uint32 itemEntry;
+
+        uint32 seasonId;
+
+        std::string name;
+    };
+
+    // NEW Raid database cache
+    struct RaidInfo
+    {
+        uint32 mapId;
+
+        uint32 phase;
+
+        std::string name;
+    };
+
+    // NEW Dungeon database cache
+    struct DungeonInfo
+    {
+        uint32 mapId;
+
+        uint32 phase;
+
+        uint32 heroic;
+
+        std::string name;
+    };
+
+    struct AttunementInfo
+    {
+        uint32 mapId;
+        std::string type;
+        uint32 entry;
+        std::string name;
+    };
+
     bool m_enabled;
 
     uint32 m_phase;
 
+    uint32 m_arenaSeason;
+
     /*
         Global progression unlock cache
 
-        Database:
-
         progression_unlocks
-
-        Example:
-
-        ITEM        17030       3
-        QUEST       783         3
-        GAMEOBJECT  144131      3
-
-        Stored as:
 
         TYPE -> ENTRY -> PHASE
     */
@@ -123,18 +197,42 @@ private:
     /*
         Creature specific loot unlock cache
 
-        Example:
+        progression_loot_unlocks
 
-        Creature 23035
-        Item     32768
-        Phase    3
-
-        Stored:
-
-        Anzu -> Raven Lord mount -> Phase 3
+        Creature -> Item -> Phase
     */
 
     std::vector<LootUnlock> m_lootUnlocks;
+
+    /*
+        progression_phases
+
+        Phase -> Info
+    */
+
+    std::map<uint32, PhaseInfo> m_phases;
+
+    /*
+        progression_raids
+
+        MapID -> Raid Info
+    */
+
+    std::map<uint32, RaidInfo> m_raids;
+
+    /*
+        progression_dungeons
+
+        MapID -> Dungeon Info
+    */
+
+    std::map<std::pair<uint32, uint32>, DungeonInfo> m_dungeons;
+
+    std::vector<AttunementInfo> m_attunements;
+
+    std::map<uint32, ArenaSeasonInfo> m_arenaSeasons;
+
+    std::map<uint32, ArenaItemInfo> m_arenaItems;
 };
 
 extern ProgressionMgr* sProgressionMgr;
