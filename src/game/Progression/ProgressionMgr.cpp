@@ -2,12 +2,12 @@
 
 #include "Config/Config.h"
 #include "Database/DatabaseEnv.h"
+#include "Entities/Creature.h"
 #include "Entities/Player.h"
+#include "Globals/ObjectMgr.h"
 #include "Log/Log.h"
 #include "Server/WorldSession.h"
 #include "World/World.h"
-#include "Entities/Creature.h"
-#include "Globals/ObjectMgr.h"
 
 ProgressionMgr* sProgressionMgr = new ProgressionMgr();
 
@@ -59,9 +59,13 @@ void ProgressionMgr::LoadAttunements()
     auto query = WorldDatabase.PQuery(
         "SELECT map_id, type, entry, name FROM progression_attunements");
 
+    uint32 attunementCount = 0;
+
     if (!query)
     {
-        sLog.outString("Progression: no attunement data found");
+        sLog.outString(
+            "Progression attunements loaded: 0 entries");
+
         return;
     }
 
@@ -78,14 +82,13 @@ void ProgressionMgr::LoadAttunements()
 
         m_attunements.push_back(info);
 
-        sLog.outString(
-            "Progression attunement loaded: Map %u Type %s Entry %u %s",
-            info.mapId,
-            info.type.c_str(),
-            info.entry,
-            info.name.c_str());
+        ++attunementCount;
 
     } while (query->NextRow());
+
+    sLog.outString(
+        "Progression attunements loaded: %u entries",
+        attunementCount);
 }
 
 void ProgressionMgr::LoadUnlocks()
@@ -98,14 +101,21 @@ void ProgressionMgr::LoadUnlocks()
     m_arenaSeasons.clear();
     m_arenaItems.clear();
 
+    //
+    // Global progression unlocks
+    //
     auto queryResult = WorldDatabase.PQuery(
         "SELECT type, entry, phase FROM progression_unlocks");
 
     if (!queryResult)
     {
-        sLog.outString("Progression: no unlock data found");
+        sLog.outString(
+            "Progression unlocks loaded: 0 entries");
+
         return;
     }
+
+    uint32 unlockCount = 0;
 
     do
     {
@@ -119,17 +129,21 @@ void ProgressionMgr::LoadUnlocks()
 
         m_unlocks[type][entry] = phase;
 
-        sLog.outString(
-            "Progression loaded: %s Entry %u Phase %u",
-            type.c_str(),
-            entry,
-            phase);
+        ++unlockCount;
 
     } while (queryResult->NextRow());
 
-    // Load creature specific loot unlocks
+    sLog.outString(
+        "Progression unlocks loaded: %u entries",
+        unlockCount);
+
+    //
+    // Creature specific loot unlocks
+    //
     auto lootQuery = WorldDatabase.PQuery(
         "SELECT creature_entry, item_entry, phase FROM progression_loot_unlocks");
+
+    uint32 lootCount = 0;
 
     if (lootQuery)
     {
@@ -145,20 +159,22 @@ void ProgressionMgr::LoadUnlocks()
 
             m_lootUnlocks.push_back(unlock);
 
-            sLog.outString(
-                "Progression loot loaded: Creature %u Item %u Phase %u",
-                unlock.creatureEntry,
-                unlock.itemEntry,
-                unlock.phase);
+            ++lootCount;
 
         } while (lootQuery->NextRow());
     }
+
+    sLog.outString(
+        "Progression loot unlocks loaded: %u entries",
+        lootCount);
 
     //
     // Load raid progression
     //
     auto raidQuery = WorldDatabase.PQuery(
         "SELECT map_id, phase, name FROM progression_raids");
+
+    uint32 raidCount = 0;
 
     if (raidQuery)
     {
@@ -174,20 +190,22 @@ void ProgressionMgr::LoadUnlocks()
 
             m_raids[raid.mapId] = raid;
 
-            sLog.outString(
-                "Progression raid loaded: Map %u %s Phase %u",
-                raid.mapId,
-                raid.name.c_str(),
-                raid.phase);
+            ++raidCount;
 
         } while (raidQuery->NextRow());
     }
+
+    sLog.outString(
+        "Progression raids loaded: %u entries",
+        raidCount);
 
     //
     // Load dungeon progression
     //
     auto dungeonQuery = WorldDatabase.PQuery(
         "SELECT map_id, phase, name, heroic FROM progression_dungeons");
+
+    uint32 dungeonCount = 0;
 
     if (dungeonQuery)
     {
@@ -202,20 +220,26 @@ void ProgressionMgr::LoadUnlocks()
             dungeon.name = fields[2].GetString();
             dungeon.heroic = fields[3].GetUInt32();
 
-            m_dungeons[std::make_pair(dungeon.mapId, dungeon.heroic)] = dungeon;
-
-            sLog.outString(
-                "Progression dungeon loaded: Map %u %s Phase %u Heroic %u",
+            m_dungeons[std::make_pair(
                 dungeon.mapId,
-                dungeon.name.c_str(),
-                dungeon.phase,
-                dungeon.heroic);
+                dungeon.heroic)] = dungeon;
+
+            ++dungeonCount;
 
         } while (dungeonQuery->NextRow());
     }
 
+    sLog.outString(
+        "Progression dungeons loaded: %u entries",
+        dungeonCount);
+
+    //
+    // Load phases
+    //
     auto phaseQuery = WorldDatabase.PQuery(
         "SELECT phase, name, expansion, patch, start_level, max_level FROM progression_phases");
+
+    uint32 phaseCount = 0;
 
     if (phaseQuery)
     {
@@ -234,16 +258,15 @@ void ProgressionMgr::LoadUnlocks()
 
             m_phases[info.phase] = info;
 
-            sLog.outString(
-                "Progression phase loaded: %u %s",
-                info.phase,
-                info.name.c_str());
+            ++phaseCount;
 
         } while (phaseQuery->NextRow());
     }
+
+    sLog.outString(
+        "Progression phases loaded: %u entries",
+        phaseCount);
 }
-
-
 
 bool ProgressionMgr::IsUnlocked(std::string type, uint32 entry) const
 {
@@ -285,7 +308,9 @@ uint32 ProgressionMgr::GetRequiredPhase(uint32 mapId) const
     return itr->second.phase;
 }
 
-uint32 ProgressionMgr::GetRequiredDungeonPhase(uint32 mapId, uint32 heroic) const
+uint32 ProgressionMgr::GetRequiredDungeonPhase(
+    uint32 mapId,
+    uint32 heroic) const
 {
     auto itr = m_dungeons.find(
         std::make_pair(mapId, heroic));
@@ -296,7 +321,9 @@ uint32 ProgressionMgr::GetRequiredDungeonPhase(uint32 mapId, uint32 heroic) cons
     return itr->second.phase;
 }
 
-bool ProgressionMgr::IsDungeonUnlocked(uint32 mapId, uint32 heroic) const
+bool ProgressionMgr::IsDungeonUnlocked(
+    uint32 mapId,
+    uint32 heroic) const
 {
     auto itr = m_dungeons.find(
         std::make_pair(mapId, heroic));
@@ -320,7 +347,9 @@ bool ProgressionMgr::IsArenaItemUnlocked(uint32 itemEntry) const
     return currentSeason >= itr->second.seasonId;
 }
 
-bool ProgressionMgr::HasAttunement(Player* player, uint32 mapId) const
+bool ProgressionMgr::HasAttunement(
+    Player* player,
+    uint32 mapId) const
 {
     if (!player)
         return false;
@@ -361,11 +390,12 @@ bool ProgressionMgr::HasAttunement(Player* player, uint32 mapId) const
     return true;
 }
 
-const char* ProgressionMgr::GetDungeonName(uint32 mapId, uint32 heroic) const
+const char* ProgressionMgr::GetDungeonName(
+    uint32 mapId,
+    uint32 heroic) const
 {
     auto itr = m_dungeons.find(
-        std::make_pair(mapId, heroic)
-    );
+        std::make_pair(mapId, heroic));
 
     if (itr == m_dungeons.end())
         return "Unknown Dungeon";
@@ -434,7 +464,9 @@ void ProgressionMgr::AnnouncePhase()
         msg);
 }
 
-bool ProgressionMgr::IsVendorItemUnlocked(uint32 vendorEntry, uint32 itemEntry) const
+bool ProgressionMgr::IsVendorItemUnlocked(
+    uint32 vendorEntry,
+    uint32 itemEntry) const
 {
     if (IsArenaItem(itemEntry))
         return IsArenaItemUnlocked(itemEntry);
@@ -479,7 +511,9 @@ bool ProgressionMgr::IsItemUnlocked(uint32 itemEntry) const
     return IsUnlocked("ITEM", itemEntry);
 }
 
-bool ProgressionMgr::IsLootItemUnlocked(uint32 creatureEntry, uint32 itemEntry) const
+bool ProgressionMgr::IsLootItemUnlocked(
+    uint32 creatureEntry,
+    uint32 itemEntry) const
 {
     // First check boss/NPC specific loot
     for (auto const& unlock : m_lootUnlocks)
@@ -495,13 +529,15 @@ bool ProgressionMgr::IsLootItemUnlocked(uint32 creatureEntry, uint32 itemEntry) 
     return IsUnlocked("ITEM", itemEntry);
 }
 
-bool ProgressionMgr::HasUnlockedQuestGiver(Creature* creature) const
+bool ProgressionMgr::HasUnlockedQuestGiver(
+    Creature* creature) const
 {
     if (!creature)
         return false;
 
     QuestRelationsMapBounds bounds =
-        sObjectMgr.GetCreatureQuestRelationsMapBounds(creature->GetEntry());
+        sObjectMgr.GetCreatureQuestRelationsMapBounds(
+            creature->GetEntry());
 
     for (QuestRelationsMap::const_iterator itr = bounds.first;
         itr != bounds.second;
@@ -519,10 +555,12 @@ void ProgressionMgr::LoadArenaSeasons()
     auto query = WorldDatabase.PQuery(
         "SELECT season_id, phase, name, patch FROM progression_arena_seasons");
 
+    uint32 seasonCount = 0;
+
     if (!query)
     {
         sLog.outString(
-            "Progression: no arena season data found");
+            "Progression arena seasons loaded: 0 entries");
 
         return;
     }
@@ -540,14 +578,13 @@ void ProgressionMgr::LoadArenaSeasons()
 
         m_arenaSeasons[info.seasonId] = info;
 
-        sLog.outString(
-            "Progression arena season loaded: Season %u %s Phase %u Patch %s",
-            info.seasonId,
-            info.name.c_str(),
-            info.phase,
-            info.patch.c_str());
+        ++seasonCount;
 
     } while (query->NextRow());
+
+    sLog.outString(
+        "Progression arena seasons loaded: %u entries",
+        seasonCount);
 }
 
 uint32 ProgressionMgr::GetCurrentArenaSeason() const
@@ -568,10 +605,12 @@ void ProgressionMgr::LoadArenaItems()
     auto query = WorldDatabase.PQuery(
         "SELECT item_entry, season_id, name FROM progression_arena_items");
 
+    uint32 arenaItemCount = 0;
+
     if (!query)
     {
         sLog.outString(
-            "Progression: no arena item data found");
+            "Progression arena items loaded: 0 entries");
 
         return;
     }
@@ -588,11 +627,11 @@ void ProgressionMgr::LoadArenaItems()
 
         m_arenaItems[info.itemEntry] = info;
 
-        sLog.outString(
-            "Progression arena item loaded: Item %u Season %u %s",
-            info.itemEntry,
-            info.seasonId,
-            info.name.c_str());
+        ++arenaItemCount;
 
     } while (query->NextRow());
+
+    sLog.outString(
+        "Progression arena items loaded: %u entries",
+        arenaItemCount);
 }

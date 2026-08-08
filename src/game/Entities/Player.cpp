@@ -14891,9 +14891,9 @@ void Player::SendQuestGiverStatusMultiple() const
             // Progression System
             if (!sProgressionMgr->HasUnlockedQuestGiver(questgiver))
             {
-                sLog.outString(
-                    "[Progression] Hidden NPC from minimap Entry: %u",
-                    questgiver->GetEntry());
+                //sLog.outString(
+                   // "[Progression] Hidden NPC from minimap Entry: %u",
+                   // questgiver->GetEntry());
 
                 continue;
             }
