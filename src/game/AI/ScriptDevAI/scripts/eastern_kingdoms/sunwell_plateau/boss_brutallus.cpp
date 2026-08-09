@@ -556,21 +556,49 @@ struct FreezeMadrigosa : public SpellScript
     void OnEffectExecute(Spell* spell, SpellEffectIndex /*effIdx*/) const override
     {
         Unit* target = spell->GetUnitTarget();
-        target->CastSpell(nullptr, SPELL_FREEZE_USE_GO, TRIGGERED_OLD_TRIGGERED);
-        if (GameObject* iceBarrier = static_cast<ScriptedInstance*>(target->GetInstanceData())->GetSingleGameObjectFromStorage(GO_ICE_BARRIER))
+
+        if (!target)
+            return;
+
+        target->CastSpell(
+            nullptr,
+            SPELL_FREEZE_USE_GO,
+            TRIGGERED_OLD_TRIGGERED);
+
+        Map* map = target->GetMap();
+
+        if (!map)
+            return;
+
+        instance_sunwell_plateau* instance =
+            dynamic_cast<instance_sunwell_plateau*>(map->GetInstanceData());
+
+        if (!instance)
+            return;
+
+        GameObject* iceBarrier =
+            instance->GetSingleGameObjectFromStorage(GO_ICE_BARRIER);
+
+        if (!iceBarrier)
+            return;
+
+        iceBarrier->SetGoState(GO_STATE_READY);
+
+        Map::PlayerList const& players = map->GetPlayers();
+
+        for (Map::PlayerList::const_iterator itr = players.begin();
+            itr != players.end();
+            ++itr)
         {
-            iceBarrier->GetVisibilityData().SetVisibilityDistanceOverride(VisibilityDistanceType::Infinite);
-            iceBarrier->SetGoState(GO_STATE_READY);
-            Map::PlayerList const& players = target->GetMap()->GetPlayers();
-            for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                Player* player = itr->getSource();
-                if (!player)
-                    continue;
-                iceBarrier->SendCreateUpdateToPlayer(player);
-                if (!player->HasAtClient(iceBarrier))
-                    player->AddAtClient(iceBarrier);
-            }
+            Player* player = itr->getSource();
+
+            if (!player)
+                continue;
+
+            iceBarrier->SendCreateUpdateToPlayer(player);
+
+            if (!player->HasAtClient(iceBarrier))
+                player->AddAtClient(iceBarrier);
         }
     }
 };
