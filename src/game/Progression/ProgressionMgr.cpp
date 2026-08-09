@@ -432,8 +432,8 @@ void ProgressionMgr::SetPhase(uint32 phase)
     if (phase < 1)
         phase = 1;
 
-    if (phase > 6)
-        phase = 6;
+    if (phase > 5)
+        phase = 5;
 
     m_phase = phase;
 

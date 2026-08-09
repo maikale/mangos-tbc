@@ -555,7 +555,30 @@ struct FreezeMadrigosa : public SpellScript
 {
     void OnEffectExecute(Spell* spell, SpellEffectIndex /*effIdx*/) const override
     {
-        spell->GetUnitTarget()->CastSpell(nullptr, SPELL_FREEZE_USE_GO, TRIGGERED_OLD_TRIGGERED);
+        Unit* target = spell->GetUnitTarget();
+        if (!target)
+            return;
+        target->CastSpell(nullptr, SPELL_FREEZE_USE_GO, TRIGGERED_OLD_TRIGGERED);
+        if (ScriptedInstance* instance = static_cast<ScriptedInstance*>(target->GetInstanceData()))
+        {
+            GameObject* iceBarrier = instance->GetSingleGameObjectFromStorage(GO_ICE_BARRIER);
+            if (iceBarrier)
+            {
+                iceBarrier->GetVisibilityData().SetVisibilityDistanceOverride(VisibilityDistanceType::Infinite);
+                iceBarrier->SetGoState(GO_STATE_READY);
+                iceBarrier->UpdateObjectVisibility();
+                Map::PlayerList const& players = target->GetMap()->GetPlayers();
+                for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                {
+                    Player* player = itr->getSource();
+                    if (!player)
+                        continue;
+                    iceBarrier->SendCreateUpdateToPlayer(player);
+                    if (!player->HasAtClient(iceBarrier))
+                        player->AddAtClient(iceBarrier);
+                }
+            }
+        }
     }
 };
 
