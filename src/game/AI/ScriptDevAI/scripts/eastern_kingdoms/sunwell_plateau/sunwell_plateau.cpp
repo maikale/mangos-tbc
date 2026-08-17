@@ -280,6 +280,7 @@ void instance_sunwell_plateau::OnObjectCreate(GameObject* go)
         case GO_ICE_BARRIER:
             go->GetVisibilityData().SetVisibilityDistanceOverride(VisibilityDistanceType::Gigantic);
             break;
+
         case GO_FIRE_BARRIER:
             if (m_auiEncounter[TYPE_FELMYST] == DONE)
                 go->SetGoState(GO_STATE_ACTIVE);
