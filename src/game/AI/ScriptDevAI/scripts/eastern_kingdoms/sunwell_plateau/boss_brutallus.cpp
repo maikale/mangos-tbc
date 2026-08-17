@@ -21,98 +21,98 @@ SDComment: Intro may need some adjustments
 SDCategory: Sunwell Plateau
 EndScriptData */
 
-#include "AI/ScriptDevAI/include/sc_common.h"
-#include "sunwell_plateau.h"
 #include "AI/ScriptDevAI/base/CombatAI.h"
+#include "AI/ScriptDevAI/include/sc_common.h"
 #include "Spells/Scripts/SpellScript.h"
+#include "sunwell_plateau.h"
 
 enum
 {
-    YELL_INTRO                      = -1580017,
-    YELL_INTRO_BREAK_ICE            = -1580018,
-    YELL_INTRO_CHARGE               = -1580019,
-    YELL_INTRO_KILL_MADRIGOSA       = -1580020,
-    YELL_INTRO_TAUNT                = -1580021,
+    YELL_INTRO = -1580017,
+    YELL_INTRO_BREAK_ICE = -1580018,
+    YELL_INTRO_CHARGE = -1580019,
+    YELL_INTRO_KILL_MADRIGOSA = -1580020,
+    YELL_INTRO_TAUNT = -1580021,
 
-    YELL_MADR_ICE_BARRIER           = -1580031,
-    YELL_MADR_INTRO                 = -1580032,
-    YELL_MADR_ICE_BLOCK             = -1580033,
-    YELL_MADR_TRAP                  = -1580034,
-    YELL_MADR_DEATH                 = -1580035,
+    YELL_MADR_ICE_BARRIER = -1580031,
+    YELL_MADR_INTRO = -1580032,
+    YELL_MADR_ICE_BLOCK = -1580033,
+    YELL_MADR_TRAP = -1580034,
+    YELL_MADR_DEATH = -1580035,
 
-    YELL_AGGRO                      = -1580022,
-    YELL_KILL1                      = 25629,
-    YELL_KILL2                      = 25630,
-    YELL_KILL3                      = 25631,
-    YELL_LOVE1                      = -1580026,
-    YELL_LOVE2                      = -1580027,
-    YELL_LOVE3                      = -1580028,
-    YELL_BERSERK                    = -1580029,
-    YELL_DEATH                      = -1580030,
+    YELL_AGGRO = -1580022,
+    YELL_KILL1 = 25629,
+    YELL_KILL2 = 25630,
+    YELL_KILL3 = 25631,
+    YELL_LOVE1 = -1580026,
+    YELL_LOVE2 = -1580027,
+    YELL_LOVE3 = -1580028,
+    YELL_BERSERK = -1580029,
+    YELL_DEATH = -1580030,
 
-    SPELL_METEOR_SLASH              = 45150,
-    SPELL_BURN                      = 45141,
-    SPELL_BURN_DAMAGE               = 46394,
-    SPELL_STOMP                     = 45185,
-    SPELL_BERSERK                   = 26662,
-    SPELL_SUMMON_DEATH_CLOUD        = 45884,                // Summoned on death
+    SPELL_METEOR_SLASH = 45150,
+    SPELL_BURN = 45141,
+    SPELL_BURN_DAMAGE = 46394,
+    SPELL_STOMP = 45185,
+    SPELL_BERSERK = 26662,
+    SPELL_SUMMON_DEATH_CLOUD = 45884, // Summoned on death
 
-    SPELL_DUAL_WEILD_PASSIVE        = 42459,
-    SPELL_TAUNT_HIT_CHANCE          = 45210,
+    SPELL_DUAL_WEILD_PASSIVE = 42459,
+    SPELL_TAUNT_HIT_CHANCE = 45210,
 
     // Epilogue spells
-    SPELL_BRUTALLUS_DEATH_CLOUD     = 45212,
-    SPELL_FELBLAZE_PREVIZUAL        = 44885,
-    SPELL_SUMMON_FELBLAZE           = 45069,
+    SPELL_BRUTALLUS_DEATH_CLOUD = 45212,
+    SPELL_FELBLAZE_PREVIZUAL = 44885,
+    SPELL_SUMMON_FELBLAZE = 45069,
 
-    NPC_BRUTALLUS_DEATH_CLOUD       = 25703,
+    NPC_BRUTALLUS_DEATH_CLOUD = 25703,
 
     // spells used during the intro event
-    SPELL_FROST_BLAST               = 45203,                // Madrigosa's spells
-    SPELL_FREEZE                    = 46609,                // Activates the ice barrier - script effect for 46610
-    SPELL_FREEZE_USE_GO             = 46610,
-    SPELL_FROSTBOLT                 = 44843,
-    SPELL_FROST_BREATH              = 45065,
-    SPELL_ENCAPSULATE               = 44883,
-    SPELL_FEL_FIREBALL              = 44844,                // Brutallus' spells
-    SPELL_CLEAR_DEBUFFS             = 34098,
-    SPELL_FLAME_RING                = 44874,                // this spell should have a fire explosion when removed
-    SPELL_CHARGE                    = 44884,
-    SPELL_BREAK_ICE                 = 46637,                // Break the ice, open the door - dummy spell for 46638 and 47030
-    SPELL_ARCANE_EXPLOSION_VISUAL   = 35426,
-    SPELL_FULL_HEAL                 = 17683,
+    SPELL_FROST_BLAST = 45203, // Madrigosa's spells
+    SPELL_FREEZE = 46609,      // Activates the ice barrier - script effect for 46610
+    SPELL_FREEZE_USE_GO = 46610,
+    SPELL_FROSTBOLT = 44843,
+    SPELL_FROST_BREATH = 45065,
+    SPELL_ENCAPSULATE = 44883,
+    SPELL_FEL_FIREBALL = 44844, // Brutallus' spells
+    SPELL_CLEAR_DEBUFFS = 34098,
+    SPELL_FLAME_RING = 44874, // this spell should have a fire explosion when removed
+    SPELL_CHARGE = 44884,
+    SPELL_BREAK_ICE = 46637, // Break the ice, open the door - dummy spell for 46638 and 47030
+    SPELL_ARCANE_EXPLOSION_VISUAL = 35426,
+    SPELL_FULL_HEAL = 17683,
 
-    SPELL_PERMANENT_FEIGN_DEATH     = 29266,
+    SPELL_PERMANENT_FEIGN_DEATH = 29266,
 
-    SPELL_SELF_STUN                 = 45066,
+    SPELL_SELF_STUN = 45066,
 
-    POINT_MOVE_GROUND               = 1,
-    POINT_MOVE_ICE_BLOCK            = 2,
-    POINT_MOVE_ENCAPSULATE          = 3,
-    POINT_MOVE_FEL_FIREBALL         = 4,
+    POINT_MOVE_GROUND = 1,
+    POINT_MOVE_ICE_BLOCK = 2,
+    POINT_MOVE_ENCAPSULATE = 3,
+    POINT_MOVE_FEL_FIREBALL = 4,
 };
 
 static const DialogueEntry aIntroDialogue[] =
-{
-    {NPC_MADRIGOSA,             0,              6000},
-    {YELL_MADR_ICE_BARRIER,     NPC_MADRIGOSA,  7000},
-    {YELL_MADR_INTRO,           NPC_MADRIGOSA,  7000},
-    {YELL_INTRO,                NPC_BRUTALLUS,  6000},
-    {SPELL_FROST_BREATH,        0,              6000},
-    {POINT_MOVE_ICE_BLOCK,      0,              5000},
-    {YELL_MADR_ICE_BLOCK,       NPC_MADRIGOSA,  5000},
-    {SPELL_FLAME_RING,          0,              7000},
-    {YELL_INTRO_BREAK_ICE,      NPC_BRUTALLUS,  1000},
-    {SPELL_FEL_FIREBALL,        0,              4000},
-    {POINT_MOVE_GROUND,         0,              5000},
-    {YELL_MADR_TRAP,            NPC_MADRIGOSA,  3000},
-    {POINT_MOVE_ENCAPSULATE,    0,              7000},
-    {YELL_INTRO_CHARGE,         NPC_BRUTALLUS,  2000},
-    {SPELL_CHARGE,              NPC_BRUTALLUS,  5000},
-    {SPELL_SELF_STUN,           0,              5000},
-    {YELL_INTRO_KILL_MADRIGOSA, NPC_BRUTALLUS,  8000},
-    {YELL_INTRO_TAUNT,          NPC_BRUTALLUS,  0},
-    {0, 0, 0},
+    {
+        {NPC_MADRIGOSA,             0,             6000},
+        {YELL_MADR_ICE_BARRIER,     NPC_MADRIGOSA, 7000},
+        {YELL_MADR_INTRO,           NPC_MADRIGOSA, 7000},
+        {YELL_INTRO,                NPC_BRUTALLUS, 6000},
+        {SPELL_FROST_BREATH,        0,             6000},
+        {POINT_MOVE_ICE_BLOCK,      0,             5000},
+        {YELL_MADR_ICE_BLOCK,       NPC_MADRIGOSA, 5000},
+        {SPELL_FLAME_RING,          0,             7000},
+        {YELL_INTRO_BREAK_ICE,      NPC_BRUTALLUS, 1000},
+        {SPELL_FEL_FIREBALL,        0,             4000},
+        {POINT_MOVE_GROUND,         0,             5000},
+        {YELL_MADR_TRAP,            NPC_MADRIGOSA, 3000},
+        {POINT_MOVE_ENCAPSULATE,    0,             7000},
+        {YELL_INTRO_CHARGE,         NPC_BRUTALLUS, 2000},
+        {SPELL_CHARGE,              NPC_BRUTALLUS, 5000},
+        {SPELL_SELF_STUN,           0,             5000},
+        {YELL_INTRO_KILL_MADRIGOSA, NPC_BRUTALLUS, 8000},
+        {YELL_INTRO_TAUNT,          NPC_BRUTALLUS, 0   },
+        {0,                         0,             0   },
 };
 
 /*######
@@ -131,11 +131,12 @@ enum BrutallusActions
     BRUTALLUS_MADRIGOSA_SPAWN_MOVE,
 };
 
-struct boss_brutallusAI : public CombatAI, private DialogueHelper
+struct boss_brutallusAI : public CombatAI,
+                          private DialogueHelper
 {
     boss_brutallusAI(Creature* creature) : CombatAI(creature, BRUTALLUS_ACTION_MAX), DialogueHelper(aIntroDialogue),
-        m_instance(static_cast<instance_sunwell_plateau*>(creature->GetInstanceData())),
-        m_bIsIntroInProgress(false)
+                                           m_instance(static_cast<instance_sunwell_plateau*>(creature->GetInstanceData())),
+                                           m_bIsIntroInProgress(false)
     {
         InitializeDialogueHelper(m_instance);
         AddCombatAction(BRUTALLUS_BERSERK, uint32(6 * MINUTE * IN_MILLISECONDS));
@@ -513,7 +514,7 @@ struct SpellBurnDamageBrutallus : public AuraScript
     void OnPeriodicCalculateAmount(Aura* aura, uint32& amount) const override
     {
         if (aura->GetEffIndex() == EFFECT_INDEX_0 && aura->GetAuraTicks() % 11 == 0)
-            aura->GetModifier()-> m_amount *= 2;
+            aura->GetModifier()->m_amount *= 2;
 
         amount = aura->GetModifier()->m_amount;
     }
@@ -556,51 +557,7 @@ struct FreezeMadrigosa : public SpellScript
 {
     void OnEffectExecute(Spell* spell, SpellEffectIndex /*effIdx*/) const override
     {
-        Unit* target = spell->GetUnitTarget();
-
-        if (!target)
-            return;
-
-        target->CastSpell(
-            nullptr,
-            SPELL_FREEZE_USE_GO,
-            TRIGGERED_OLD_TRIGGERED);
-
-        Map* map = target->GetMap();
-
-        if (!map)
-            return;
-
-        instance_sunwell_plateau* instance =
-            dynamic_cast<instance_sunwell_plateau*>(map->GetInstanceData());
-
-        if (!instance)
-            return;
-
-        GameObject* iceBarrier =
-            instance->GetSingleGameObjectFromStorage(GO_ICE_BARRIER);
-
-        if (!iceBarrier)
-            return;
-
-        iceBarrier->SetGoState(GO_STATE_READY);
-
-        Map::PlayerList const& players = map->GetPlayers();
-
-        for (Map::PlayerList::const_iterator itr = players.begin();
-            itr != players.end();
-            ++itr)
-        {
-            Player* player = itr->getSource();
-
-            if (!player)
-                continue;
-
-            iceBarrier->SendCreateUpdateToPlayer(player);
-
-            if (!player->HasAtClient(iceBarrier))
-                player->AddAtClient(iceBarrier);
-        }
+        spell->GetUnitTarget()->CastSpell(nullptr, SPELL_FREEZE_USE_GO, TRIGGERED_OLD_TRIGGERED);
     }
 };
 

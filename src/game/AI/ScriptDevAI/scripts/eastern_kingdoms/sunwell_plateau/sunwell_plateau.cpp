@@ -21,8 +21,8 @@ SDComment:
 SDCategory: Sunwell_Plateau
 EndScriptData */
 
-#include "AI/ScriptDevAI/include/sc_common.h"
 #include "sunwell_plateau.h"
+#include "AI/ScriptDevAI/include/sc_common.h"
 #include "Maps/MapPersistentStateMgr.h"
 
 /* Sunwell Plateau:
@@ -35,24 +35,24 @@ EndScriptData */
 */
 
 static const DialogueEntry aFelmystOutroDialogue[] =
-{
-    {NPC_KALECGOS_MADRIGOSA, 0,                        10000},
-    {SAY_KALECGOS_OUTRO,     NPC_KALECGOS_MADRIGOSA,   5000},
-    {NPC_FELMYST,            0,                        5000},
-    {SPELL_OPEN_BACK_DOOR,   0,                        9000},
-    {NPC_BRUTALLUS,          0,                        0},
-    {0, 0, 0},
+    {
+        {NPC_KALECGOS_MADRIGOSA, 0,                      10000},
+        {SAY_KALECGOS_OUTRO,     NPC_KALECGOS_MADRIGOSA, 5000 },
+        {NPC_FELMYST,            0,                      5000 },
+        {SPELL_OPEN_BACK_DOOR,   0,                      9000 },
+        {NPC_BRUTALLUS,          0,                      0    },
+        {0,                      0,                      0    },
 };
 
 instance_sunwell_plateau::instance_sunwell_plateau(Map* pMap) : ScriptedInstance(pMap), DialogueHelper(aFelmystOutroDialogue),
-    m_brutallusIntroStarted(false),
-    m_firstEnter(true),
-    m_impsStarted(false),
-    m_miniAttackEvent(false),
-    m_uiDeceiversKilled(0),
-    m_uiSpectralRealmTimer(5000),
-    m_uiMuruBerserkTimer(0),
-    m_uiKiljaedenYellTimer(90000)
+                                                                m_brutallusIntroStarted(false),
+                                                                m_firstEnter(true),
+                                                                m_impsStarted(false),
+                                                                m_miniAttackEvent(false),
+                                                                m_uiDeceiversKilled(0),
+                                                                m_uiSpectralRealmTimer(5000),
+                                                                m_uiMuruBerserkTimer(0),
+                                                                m_uiKiljaedenYellTimer(90000)
 {
     Initialize();
 }
@@ -68,10 +68,9 @@ void instance_sunwell_plateau::Initialize()
 {
     memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
     InitializeDialogueHelper(this);
-    AddCustomAction(ACTION_SPAWN_MURU, true, [&] () { SpawnMuru(); });
+    AddCustomAction(ACTION_SPAWN_MURU, true, [&]() { SpawnMuru(); });
     AddCustomAction(ACTION_IMP_YELL, true, [&]() { ImpYell(); });
-    AddCustomAction(ACTION_MURU_DOOR, true, [&]()
-    {
+    AddCustomAction(ACTION_MURU_DOOR, true, [&]() {
         Creature* muru = GetSingleCreatureFromStorage(NPC_MURU);
         if (!muru->IsInCombat() || muru->GetCombatManager().IsEvadingHome())
             return;
@@ -274,13 +273,6 @@ void instance_sunwell_plateau::OnObjectCreate(GameObject* go)
 {
     switch (go->GetEntry())
     {
-        case GO_FORCEFIELD:
-        case GO_BOSS_COLLISION_1:
-        case GO_BOSS_COLLISION_2:
-        case GO_ICE_BARRIER:
-            go->GetVisibilityData().SetVisibilityDistanceOverride(VisibilityDistanceType::Gigantic);
-            break;
-
         case GO_FIRE_BARRIER:
             if (m_auiEncounter[TYPE_FELMYST] == DONE)
                 go->SetGoState(GO_STATE_ACTIVE);
@@ -316,11 +308,10 @@ void instance_sunwell_plateau::SetData(uint32 type, uint32 data)
                 DoUseOpenableObject(GO_FORCEFIELD, true);
                 DoUseOpenableObject(GO_BOSS_COLLISION_1, true);
                 DoUseOpenableObject(GO_BOSS_COLLISION_2, true);
-
             }
             if (data == FAIL)
             {
-                std::vector<uint32> entries = { NPC_KALECGOS_DRAGON, NPC_SATHROVARR };
+                std::vector<uint32> entries = {NPC_KALECGOS_DRAGON, NPC_SATHROVARR};
                 for (uint32 entry : entries)
                 {
                     if (Creature* bossNpc = GetSingleCreatureFromStorage(entry))
@@ -374,8 +365,8 @@ void instance_sunwell_plateau::SetData(uint32 type, uint32 data)
             }
             if (data == FAIL)
             {
-                std::vector<uint32> entries = { NPC_SACROLASH, NPC_ALYTHESS };
-                std::vector<uint32> guids = { GUID_PREFIX + 346, GUID_PREFIX + 347 };
+                std::vector<uint32> entries = {NPC_SACROLASH, NPC_ALYTHESS};
+                std::vector<uint32> guids = {GUID_PREFIX + 346, GUID_PREFIX + 347};
                 for (uint32 i = 0; i < entries.size(); ++i)
                 {
                     if (Creature* bossNpc = GetSingleCreatureFromStorage(entries[i]))
@@ -407,7 +398,7 @@ void instance_sunwell_plateau::SetData(uint32 type, uint32 data)
                 m_uiMuruBerserkTimer = 10 * MINUTE * IN_MILLISECONDS;
             if (data == FAIL || data == DONE)
             {
-                std::vector<uint32> entries = { NPC_MURU, NPC_ENTROPIUS };
+                std::vector<uint32> entries = {NPC_MURU, NPC_ENTROPIUS};
                 for (uint32 entry : entries)
                     if (Creature* bossNpc = GetSingleCreatureFromStorage(entry))
                         bossNpc->ForcedDespawn();
@@ -554,7 +545,7 @@ void instance_sunwell_plateau::Load(const char* in)
 
     std::istringstream loadStream(in);
     loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >>
-               m_auiEncounter[3] >> m_auiEncounter[4] >> m_auiEncounter[5];
+        m_auiEncounter[3] >> m_auiEncounter[4] >> m_auiEncounter[5];
 
     for (uint32& i : m_auiEncounter)
     {
@@ -578,7 +569,7 @@ void instance_sunwell_plateau::DoSortFlightTriggers()
         return;
     }
 
-    std::list<Creature*> lTriggers;                         // Valid pointers, only used locally
+    std::list<Creature*> lTriggers; // Valid pointers, only used locally
     for (GuidList::const_iterator itr = m_lAllFlightTriggersList.begin(); itr != m_lAllFlightTriggersList.end(); ++itr)
     {
         if (Creature* trigger = instance->GetCreature(*itr))
@@ -665,7 +656,7 @@ void instance_sunwell_plateau::FailKiljaeden()
     m_uiDeceiversKilled = 0;
 
     // Respawn Orbs
-    std::vector<uint32> gos = { GO_ORB_BLUE_FLIGHT_1, GO_ORB_BLUE_FLIGHT_2, GO_ORB_BLUE_FLIGHT_3, GO_ORB_BLUE_FLIGHT_4 };
+    std::vector<uint32> gos = {GO_ORB_BLUE_FLIGHT_1, GO_ORB_BLUE_FLIGHT_2, GO_ORB_BLUE_FLIGHT_3, GO_ORB_BLUE_FLIGHT_4};
     for (uint32 entry : gos)
     {
         if (GameObject* object = GetSingleGameObjectFromStorage(entry))
