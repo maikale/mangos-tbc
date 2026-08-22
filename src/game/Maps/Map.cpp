@@ -1582,10 +1582,16 @@ void Map::UpdateObjectVisibility(WorldObject* obj, Cell cell, const CellPair& ce
         {
 #ifdef ENABLE_PLAYERBOTS
             if (sPlayerbotAIConfig.disableBotOptimizations || player->isRealPlayer())
-#endif
+            {
+                UpdateData data;
+                player->UpdateVisibilityOf(player->GetCamera().GetBody(), obj, data);
+                data.SendData(*player->GetSession()); // TODO: This is meant to be done in next broadcast, not immediately
+            }
+#else
             UpdateData data;
             player->UpdateVisibilityOf(player->GetCamera().GetBody(), obj, data);
             data.SendData(*player->GetSession()); // TODO: This is meant to be done in next broadcast, not immediately
+#endif
         }
     }
 }
@@ -2752,7 +2758,7 @@ void Map::UpdateVisibility(UpdateDataMapType& update_players)
             Player* plr = m_mapRefIter->getSource();
             if (plr && plr->IsInWorld())
 #ifdef ENABLE_PLAYERBOTS
-                if (isRealPlayer())
+                if (plr->isRealPlayer())
 #endif
                     plr->HandleStealthedUnitsDetection();
         }
